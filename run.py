@@ -226,7 +226,7 @@ def create_task_card(cardStorage, taskNumber,
     # card split into 9Rx8C; cells evenly sized
     for i in range(1, 10): #R1-R9
         mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
-    for i in range(2, 9-1): #C2-C7
+    for i in range(2, 9-1): #C2-C8
         mainFrame.grid_columnconfigure(i, weight = 1, uniform = "cardcolumns")
     mainFrame.grid_propagate(0) # stop auto resize
     
