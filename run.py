@@ -9,7 +9,8 @@ import sqlite3
 
 # TODO: replace do_nothing() with edit functionality (line 235)
 # TODO: replace do_nothing() with delete functionality (line 236)
-
+MainWindow = None
+cardStorage = [] # stores tasks as cards
 def main():
     
     # connect to database during start
@@ -25,15 +26,14 @@ def main():
                     ''')
           
     # attributes
-    cardStorage = [] # stores tasks as cards
 
     # create master window
     requiredRow = 8
     requiredCol = 6
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
-    
+    MainWindow = mainWindow
     # Shyam
-    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow(mainWindow, cardStorage))
+    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow)
     filterLabel = Label(mainWindow ,text = "Filter: ") 
     current_tag = StringVar()
     tags = Combobox(mainWindow, textvariable = current_tag)
@@ -57,17 +57,17 @@ def main():
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
     # create "Sprint Master" label
-    labelSprintMaster = add_label(mainWindow, "Sprint Master")
+    labelSprintMaster = add_label("Sprint Master")
     startRow, startCol, spanRow, spanCol = 1, 1, 1, 6
     labelSprintMaster.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol)
     
     # display all cards
-    display(mainWindow, cardStorage)
+    display(cardStorage)
     
     # run   
     mainWindow.mainloop()
 
-def createNewTaskWindow(mainWindow, cardArray):
+def createNewTaskWindow():
 
     def create():
 
@@ -97,14 +97,14 @@ def createNewTaskWindow(mainWindow, cardArray):
                             )
         
         # show card immediately after task creation
-        currentTaskNumber = len(cardArray)+1 # create the card
-        create_task_card(mainWindow, cardArray, currentTaskNumber, 
+        currentTaskNumber = len(cardStorage)+1 # create the card
+        create_task_card(cardStorage, currentTaskNumber, 
                          entry1.get(), entry2.get(), priority.get(), entry2.get(), status.get(),assigned_to.get())
         
-        currentRow = 4 + math.floor((len(cardArray)-1)//4) # determine row and col to print
+        currentRow = 4 + math.floor((len(cardStorage)-1)//4) # determine row and col to print
         currentCol = currentTaskNumber - (currentRow-4)*4 + 1
         
-        cardArray[-1].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s") # print card
+        cardStorage[-1].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s") # print card
         
         # Commit changes
         connect_db.commit()
@@ -122,7 +122,7 @@ def createNewTaskWindow(mainWindow, cardArray):
 
     # Toplevel object which will
     # be treated as a new window
-    newTaskWindow = Toplevel(mainWindow)
+    newTaskWindow = Toplevel(MainWindow)
  
     # sets the title of the
     # Toplevel widget
@@ -214,15 +214,15 @@ def new_page(title, size):
     return newPage
     
 # add label and position it
-def add_label(page, displayText):
-    newLabel = Label(page, text = displayText, bd = 5, padx = 3, pady = 3)
+def add_label(displayText):
+    newLabel = Label(MainWindow, text = displayText, bd = 5, padx = 3, pady = 3)
     return newLabel
 
 # create card to represent a task in display
-def create_task_card(window, cardStorage, taskNumber, 
+def create_task_card(cardStorage, taskNumber, 
                      DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign):
     # main frame for card
-    mainFrame = Frame(window, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+    mainFrame = Frame(MainWindow, width=280, height=200, highlightbackground="gray", highlightthickness=2)
     # card split into 9Rx8C; cells evenly sized
     for i in range(1, 10): #R1-R9
         mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
@@ -297,7 +297,7 @@ def place_card(cardStorage):
         cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
         currentCol += 1
         
-def display(window, cardArray):
+def display(cardArray):
     # connect to database
     connect_db = sqlite3.connect("tasks.db")
     
@@ -318,7 +318,7 @@ def display(window, cardArray):
     taskNumber = 1
     for row in rows:
         DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign = row[0], row[1], row[3], row[2], row[4], row[5]
-        create_task_card(window, cardArray, taskNumber, DescName, 
+        create_task_card(cardArray, taskNumber, DescName, 
                          DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
         taskNumber += 1
     
