@@ -9,6 +9,7 @@ import sqlite3
 
 # TODO: replace do_nothing() with edit functionality (line 235)
 # TODO: replace do_nothing() with delete functionality (line 236)
+
 MainWindow = None
 cardStorage = [] # stores tasks as cards
 def main():
