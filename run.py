@@ -1,17 +1,31 @@
 from email import message
+import math
 from msilib.schema import ComboBox
+from queue import Empty
 from tkinter import *
 from tkinter import messagebox
 from tkinter.ttk import Combobox
 import sqlite3
 
-# TODO: tidy up code and add comments
-# TODO: integrate cards with database
+# TODO: replace do_nothing() with edit functionality (line 235)
+# TODO: replace do_nothing() with delete functionality (line 236)
 
 def main():
     
+    # connect to database during start
+    connect_db = sqlite3.connect('tasks.db')
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
+    # create table "tasks" in same dir if it does not exist locally
+    cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS tasks
+                    ([task_name], [task_description], [stroy_points], [priority], [status], [assigned_to], [tag])
+                    ''')
+          
     # attributes
-    cardStorage = []
+    cardStorage = [] # stores tasks as cards
 
     # create master window
     requiredRow = 8
@@ -19,7 +33,7 @@ def main():
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
     
     # Shyam
-    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow(mainWindow))
+    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow(mainWindow, cardStorage))
     filterLabel = Label(mainWindow ,text = "Filter: ") 
     current_tag = StringVar()
     tags = Combobox(mainWindow, textvariable = current_tag)
@@ -28,41 +42,32 @@ def main():
     tags['state'] = 'readonly'
     tags.current(0)
     
-    # create space in grid for C1
-    space = Frame(mainWindow, width=50, height=50)
+    # create spacing in grid for C1 and C6
+    spaceStart = Frame(mainWindow, width=50, height=50)
     spaceEnd = Frame(mainWindow, width=50, height=50)
-    space.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
+    spaceStart.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
     spaceEnd.grid(row = 3, column = 6, padx = 3, pady = 3, sticky = "ne")
 
-    startRow, startCol, spanRow, spanCol = 2, 5, 1, 1
+    # place buttons within main window
+    startRow, startCol, spanRow, spanCol = 2, 5, 1, 1 # tags
     tags.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
-    startRow, startCol, spanRow, spanCol = 2, 4, 1, 1
+    startRow, startCol, spanRow, spanCol = 2, 4, 1, 1 # filter:
     filterLabel.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
-    startRow, startCol, spanRow, spanCol = 2, 2, 1, 2
+    startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
-    # create top label
+    # create "Sprint Master" label
     labelSprintMaster = add_label(mainWindow, "Sprint Master")
     startRow, startCol, spanRow, spanCol = 1, 1, 1, 6
     labelSprintMaster.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol)
     
-    # add cards
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    create_task_card(mainWindow, cardStorage)
-    
-    # show cards
-    place_card(cardStorage)
+    # display all cards
+    display(mainWindow, cardStorage)
     
     # run   
     mainWindow.mainloop()
 
-def createNewTaskWindow(mainWindow):
+def createNewTaskWindow(mainWindow, cardArray):
 
     def create():
 
@@ -71,13 +76,11 @@ def createNewTaskWindow(mainWindow):
         # Create cusror
         cursor = connect_db.cursor()
         
-        # CARSON: create table "tasks" in same dir if it does not exist
+        # create table "tasks" in same dir if it does not exist locally
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS tasks
                        ([task_name], [task_description], [stroy_points], [priority], [status], [assigned_to], [tag])
                        ''')
-        
-        connect_db.commit
         
         # input data
         connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :stroy_points, :priority, :status, :assigned_to, :tag)", 
@@ -92,6 +95,17 @@ def createNewTaskWindow(mainWindow):
                         }
                        
                             )
+        
+        # show card immediately after task creation
+        currentTaskNumber = len(cardArray)+1 # create the card
+        create_task_card(mainWindow, cardArray, currentTaskNumber, 
+                         entry1.get(), entry2.get(), priority.get(), entry2.get(), status.get(),assigned_to.get())
+        
+        currentRow = 4 + math.floor((len(cardArray)-1)//4) # determine row and col to print
+        currentCol = currentTaskNumber - (currentRow-4)*4 + 1
+        
+        cardArray[-1].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s") # print card
+        
         # Commit changes
         connect_db.commit()
         # Close Connnection
@@ -192,16 +206,12 @@ def init_main_window(title, size, splitRow, splitCol):
     main.grid_columnconfigure(splitCol, weight = 1)
     return main
 
-# first page
+# new page (window)
 def new_page(title, size):
     newPage = Tk()
     newPage.title(title)
     newPage.geometry(size)
     return newPage
-
-# add frame to array (TODO: replaced by card object later)
-def add_frame(frameArray, thisFrame):
-    frameArray.append(thisFrame)
     
 # add label and position it
 def add_label(page, displayText):
@@ -209,41 +219,68 @@ def add_label(page, displayText):
     return newLabel
 
 # create card to represent a task in display
-def create_task_card(window, cardStorage):
+def create_task_card(window, cardStorage, taskNumber, 
+                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign):
     # main frame for card
-    mainFrame = Frame(window, bg = "gray", width=280, height=200)
-    # card split into 5Rx8C; cells evenly sized
-    for i in range(1, 8): #R1-R7
+    mainFrame = Frame(window, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+    # card split into 9Rx8C; cells evenly sized
+    for i in range(1, 10): #R1-R9
         mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
     for i in range(2, 9-1): #C2-C7
         mainFrame.grid_columnconfigure(i, weight = 1, uniform = "cardcolumns")
     mainFrame.grid_propagate(0) # stop auto resize
     
     # print fields and buttons for card
-    cardName = Label(mainFrame, text = "Task 1")
-    cardName.config(font=("Courier", 8))
-    cardStatus = Label(mainFrame, text = "..", font=("Courier", 8), bg = "#3AFF00", fg = "#3AFF00")
-    cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8))
-    cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF")
-    cardDescName = Label(mainFrame, text = "Name: ")
-    cardDescPriority = Label(mainFrame, text = "Priority: ")
-    cardDescPoints = Label(mainFrame, text = "Story Points: ")
-    cardDescStatus = Label(mainFrame, text = "Status: ")
+    cardNum = Label(mainFrame, text = "Task ", font=("Arial" ,8, "bold"))
+    cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8), command = do_nothing)
+    cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command = do_nothing)
+    cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
+    cardDescDesc = Label(mainFrame, text = "Description: ", font=("Arial" ,8, "bold"))
+    cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
+    cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
+    cardDescStatus = Label(mainFrame, text = "Status: ", font=("Arial" ,8, "bold"))
+    cardDescAssign = Label(mainFrame, text = "Assigned to: ", font=("Arial" ,8, "bold"))
+    
+    # print variable data from database
+    variableCardNum = Label(mainFrame, text = taskNumber, font=("Arial" ,8, "bold"))        
+    variableDescName = Label(mainFrame, text = DescName)
+    variableDescDesc = Label(mainFrame, text = DescDesc)
+    variableDescPriority = Label(mainFrame, text = DescPriority)
+    variableDescPoints = Label(mainFrame, text = DescPoints)
+    for status in ["Not Started", "In Progress", "Complete"]:
+        if DescStatus == status:
+            variableDescStatus = Label(mainFrame, text = status)
+            break
+    variableDescAssign = Label(mainFrame, text = DescAssign)
     
     # position of fields and buttons within card
-    frontSpace = Label(mainFrame, width=1, height=1, bg = "gray") #R2C1 space
-    endSpace = Label(mainFrame, width=1, height=1, bg = "gray") # R2C8 space
-    frontSpace.grid(row = 2, column = 1, padx = 3, pady = 3, sticky = "nw")
-    endSpace.grid(row = 2, column = 8, padx = 3, pady = 3, sticky = "ne")
+    frontSpace = Label(mainFrame, width=200, height=1, bg = "gray") # coloured status bar
+    if DescStatus == "Not Started":
+        frontSpace.config(fg = "#FF0000", bg = "#FF0000")
+    elif DescStatus == "In Progress":
+        frontSpace.config(fg = "#FFD800", bg = "#FFD800")
+    elif DescStatus == "Complete":
+        frontSpace.config(fg = "#3AFF00", bg = "#3AFF00")
+    frontSpace.grid(row = 2, column = 1, columnspan = 8, padx = 3, pady = 3)
     
-    cardName.grid(row = 1, column = 2, columnspan = 3, padx = 2, pady = 2, sticky = "w")
-    cardStatus.grid(row = 1, column = 6, padx = 2, pady = 2, sticky = "e")
+    cardNum.grid(row = 1, column = 2, columnspan = 1, padx = 2, pady = 2, sticky = "w")
     cardEditTask.grid(row = 1, column = 7, padx = 2, pady = 2, sticky = "e")
     cardDelete.grid(row = 1, column = 8, padx = 2, pady = 2, sticky = "w")
     cardDescName.grid(row = 3, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescPriority.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescPoints.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescStatus.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "nw")
+    cardDescDesc.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescPriority.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescPoints.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescStatus.grid(row = 7, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescAssign.grid(row = 8, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    
+    # position of variables within card
+    variableCardNum.grid(row = 1, column = 3, columnspan = 1, padx = 2, pady = 2, sticky = "w")
+    variableDescName.grid(row = 3, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescDesc.grid(row = 4, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescPriority.grid(row = 5, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescPoints.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescStatus.grid(row = 7, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescAssign.grid(row = 8, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
     
     # add card to array
     cardStorage.append(mainFrame)
@@ -259,5 +296,40 @@ def place_card(cardStorage):
             currentRow += 1
         cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
         currentCol += 1
+        
+def display(window, cardArray):
+    # connect to database
+    connect_db = sqlite3.connect("tasks.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
+    # select all data from table    
+    cursor.execute("SELECT * from tasks")
+    rows = cursor.fetchall()
+    
+    # [0]: task_name
+    # [1]: task description
+    # [2]: story_points
+    # [3]: priority
+    # [4]: status
+    # [5]: assigned_to
+    # [6]: tag
+    taskNumber = 1
+    for row in rows:
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign = row[0], row[1], row[3], row[2], row[4], row[5]
+        create_task_card(window, cardArray, taskNumber, DescName, 
+                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
+        taskNumber += 1
+    
+    # display if cardArray not empty
+    if cardArray:
+        place_card(cardArray)
+        
+    connect_db.commit
+    connect_db.close()
+    
+def do_nothing():
+    pass
 
 main()
