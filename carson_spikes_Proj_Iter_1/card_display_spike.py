@@ -4,6 +4,8 @@ import math
 from tkinter import *
 from turtle import color
 
+# spike to test grid() feature of tkinter and how cards (frames in tkinter) can be displayed neatly in a table format
+
 def new_page(title, size):
     newPage = tk.Tk()
     newPage.title(title)
