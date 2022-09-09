@@ -9,9 +9,9 @@ import sqlite3
 
 # TODO: replace do_nothing() with edit functionality (line 235)
 # TODO: replace do_nothing() with delete functionality (line 236)
-
 MainWindow = None
 cardStorage = [] # stores tasks as cards
+newCardList = [] # card list for the 
 def main():
     
     # connect to database during start
@@ -23,7 +23,7 @@ def main():
     # create table "tasks" in same dir if it does not exist locally
     cursor.execute('''
                     CREATE TABLE IF NOT EXISTS tasks
-                    ([task_name], [task_description], [stroy_points], [priority], [status], [assigned_to], [tag])
+                    ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id])
                     ''')
           
     # attributes
@@ -42,9 +42,8 @@ def main():
     tags['values'] = ('NONE','UI', 'CALL', 'TESTING')
     tags['state'] = 'readonly'
     tags.current(0)
-
-    tags.bind('<<ComboboxSelected>>',lambda _ : selected(current_tag))
     
+    filterButton = Button(mainWindow, text = "FILTER", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
     spaceStart = Frame(mainWindow, width=50, height=50)
     spaceEnd = Frame(mainWindow, width=50, height=50)
@@ -56,7 +55,9 @@ def main():
     tags.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
     startRow, startCol, spanRow, spanCol = 2, 4, 1, 1 # filter:
     filterLabel.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
-    startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
+    startRow, startCol, spanRow, spanCol = 2, 3, 1, 1 # filter button:
+    filterButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e", padx = 10)
+    startRow, startCol, spanRow, spanCol = 2, 2, 1, 1 # create task button
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
     # create "Sprint Master" label
@@ -82,27 +83,29 @@ def createNewTaskWindow():
         # create table "tasks" in same dir if it does not exist locally
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS tasks
-                       ([task_name], [task_description], [stroy_points], [priority], [status], [assigned_to], [tag])
+                       ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id])
                        ''')
         
+        currentTaskNumber = len(cardStorage)+1 # create the card
+        
         # input data
-        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :stroy_points, :priority, :status, :assigned_to, :tag)", 
+        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :story_points, :priority, :status, :assigned_to, :tag, :id)", 
                         {
                             'task_name': entry1.get(),
                             'task_description': entry2.get(),
-                            'stroy_points': entry2.get(),
+                            'story_points': entry3.get(),
                             'priority': priority.get(),
                             'status': status.get(),
                             'assigned_to': assigned_to.get(),
-                            'tag': tag.get()
+                            'tag': tag.get(),
+                            'id': currentTaskNumber
                         }
                        
                             )
         
         # show card immediately after task creation
-        currentTaskNumber = len(cardStorage)+1 # create the card
         create_task_card(cardStorage, currentTaskNumber, 
-                         entry1.get(), entry2.get(), priority.get(), entry2.get(), status.get(),assigned_to.get())
+                         entry1.get(), entry2.get(), priority.get(), entry3.get(), status.get(),assigned_to.get())
         
         currentRow = 4 + math.floor((len(cardStorage)-1)//4) # determine row and col to print
         currentCol = currentTaskNumber - (currentRow-4)*4 + 1
@@ -183,7 +186,7 @@ def createNewTaskWindow():
 
     current_assigned_to = StringVar()
     assigned_to = Combobox(frame, textvariable = current_assigned_to)
-    assigned_to['values'] = ('Chang Ong Lin', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tion Yue Khoo')
+    assigned_to['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
     assigned_to['state'] = 'readonly'
     assigned_to.current(0)
     assigned_to.place(x = 140, y = 200)
@@ -235,8 +238,8 @@ def create_task_card(cardStorage, taskNumber,
     
     # print fields and buttons for card
     cardNum = Label(mainFrame, text = "Task ", font=("Arial" ,8, "bold"))
-    cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8), command = do_nothing)
-    cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command = do_nothing)
+    cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8), command = lambda: editTask(taskNumber))
+    cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command = lambda: delete(mainFrame, taskNumber))
     cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
     cardDescDesc = Label(mainFrame, text = "Description: ", font=("Arial" ,8, "bold"))
     cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
@@ -318,12 +321,12 @@ def display(cardArray):
     # [4]: status
     # [5]: assigned_to
     # [6]: tag
-    taskNumber = 1
+    # [7]: id
+
     for row in rows:
-        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign = row[0], row[1], row[3], row[2], row[4], row[5]
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[7]
         create_task_card(cardArray, taskNumber, DescName, 
                          DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
-        taskNumber += 1
     
     # display if cardArray not empty
     if cardArray:
@@ -331,23 +334,176 @@ def display(cardArray):
         
     connect_db.commit
     connect_db.close()
+
+
+def editTask(taskNumber):
+    #create a new window
+    newWindow = Toplevel(MainWindow)
+    newWindow.geometry("300x300")
+    newWindow.title("edit task")
     
-def do_nothing():
-    pass
+    #connect to database
+    sqliteConnection = sqlite3.connect('tasks.db')
+    #connect to cursor
+    cursor = sqliteConnection.cursor()
 
-def selected(current_tag):
+    #Select a single row from SQLite table
+    sqlite_select_query = """SELECT * from tasks where id = ?"""
+    cursor.execute(sqlite_select_query, (taskNumber,))
+    record = cursor.fetchone()
+
+    #assign all variable to StringVar()
+    DescName = StringVar()
+    DescDesc = StringVar()
+    DescPoints = StringVar()
+    DescPriority = StringVar()
+    DescStatus = StringVar()
+    DescAssign = StringVar()
+    DescTag = StringVar()
+
+    #put data into variable
+    DescName.set(record[0])
+    DescDesc.set(record[1])
+    DescPoints.set(record[2])
+    DescPriority.set(record[3])
+    DescStatus.set(record[4])
+    DescAssign.set(record[5])
+    DescTag.set(record[6])
+
+    #making label
+    editName = Label(newWindow, text = "Name")
+    editDesc = Label(newWindow, text = "Description")
+    editPoints = Label(newWindow, text = "Story Point")
+    editPriority = Label(newWindow, text = "Priority")
+    editStatus = Label(newWindow, text = "Status")
+    editAssign = Label(newWindow, text = "Assigned To")
+    editTag = Label(newWindow, text = "Tag")
+
+    editName.grid(row = 1, column = 0, sticky = "w", pady = 2)
+    editDesc.grid(row = 2, column = 0, sticky = "w", pady = 2)
+    editPoints.grid(row = 3, column = 0, sticky = "w", pady = 2)
+    editPriority.grid(row = 4, column = 0, sticky = "w", pady = 2)
+    editStatus.grid(row = 5, column = 0, sticky = "w", pady = 2)
+    editAssign.grid(row = 6, column = 0, sticky = "w", pady = 2)
+    editTag.grid(row = 7, column = 0, sticky = "w", pady = 2)
+
+    entry1 = Entry(newWindow,  textvariable = DescName)
+    entry2 = Entry(newWindow,  textvariable = DescDesc)
+    entry3 = Entry(newWindow,  textvariable = DescPoints)
+    entry4 = Combobox(newWindow,  textvariable = DescPriority)
+    entry5 = Combobox(newWindow,  textvariable = DescStatus)
+    entry6 = Combobox(newWindow,  textvariable = DescAssign)
+    entry7 = Combobox(newWindow,  textvariable = DescTag)
     
-    if current_tag.get()=='UI':
-        print('UI')
+    entry1.grid(row = 1, column = 1, pady=5, sticky = "w")
+    entry2.grid(row = 2, column = 1, pady=5, sticky = "w")
+    entry3.grid(row = 3, column = 1, pady=5, sticky = "w")
+    entry4.grid(row = 4, column = 1, pady=5, sticky = "w")
+    entry5.grid(row = 5, column = 1, pady=5, sticky = "w")
+    entry6.grid(row = 6, column = 1, pady=5, sticky = "w")
+    entry7.grid(row = 7, column = 1, pady=5, sticky = "w")
 
-    elif current_tag.get()=='CALL':
-        print('CALL')
+    entry4['values'] = ('Low', 'Medium', 'High', 'Critical')
+    entry5['values'] = ('Not Started', 'In Progress', 'Complete')
+    entry6['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
+    entry7['values'] = ('UI', 'CALL', 'TESTING')
+    
+    entry4['state'] = 'readonly'
+    entry5['state'] = 'readonly'
+    entry6['state'] = 'readonly'
+    entry7['state'] = 'readonly'
 
-    elif current_tag.get()=='TESTING':
-        print('TESTING')
 
-def filtering(arg):
-    pass
+    def update():
+        #connect to database
+        sqliteConnection = sqlite3.connect('tasks.db')
+        #connect to cursor
+        cursor = sqliteConnection.cursor()
+
+        #update the selected row
+        sql_update_query = "Update tasks set task_name = ?, task_description = ?, story_points = ?, priority = ?, status = ?, assigned_to = ?, tag = ? where id = ?"
+        data = (str(entry1.get()), str(entry2.get()), int(entry3.get()), str(entry4.get()), str(entry5.get()), str(entry6.get()), str(entry7.get()), int(taskNumber))
+        cursor.execute(sql_update_query, data)
+        sqliteConnection.commit()
+        cursor.close()
+        sqliteConnection.close()
+
+        newWindow.destroy()
+
+    
+    editButton = Button(newWindow, text = "edit", command = update)
+    editButton.grid(row = 8, column = 2, pady=5, sticky = "w")
+
+    cursor.close()
+    sqliteConnection.close()
+
+
+def delete(mainFrame, taskNumber):
+    #delete card
+    mainFrame.destroy()
+
+    #connect database
+    sqliteConnection = sqlite3.connect('tasks.db')
+    #connect cursor
+    cursor = sqliteConnection.cursor()
+
+    #delete selected row
+    sql_update_query = """DELETE from tasks where id = ?"""
+    cursor.execute(sql_update_query, (taskNumber,))
+    sqliteConnection.commit()
+    cursor.close()
+    sqliteConnection.close()
+
+def filter(tag):
+    global cardStorage
+    global newCardList
+    if tag == 'NONE':
+        cardStorage = []
+        for card in newCardList:
+            card.destroy()
+        display(cardStorage) 
+        return
     
 
+
+    for card in cardStorage:
+        card.destroy()
+    newCardList = []
+    displayFilter(newCardList, tag)
+
+def displayFilter(cardArray, tag):
+    # connect to database
+    connect_db = sqlite3.connect("tasks.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
+    # select all data from table according to the tag
+    
+    sql_filter_query = """SELECT * from tasks where tag = ?"""   
+    cursor.execute(sql_filter_query, (tag,))
+    rows = cursor.fetchall()
+    
+    # [0]: task_name
+    # [1]: task description
+    # [2]: story_points
+    # [3]: priority
+    # [4]: status
+    # [5]: assigned_to
+    # [6]: tag
+    # [7]: id
+
+    for row in rows:
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[7]
+        create_task_card(cardArray, taskNumber, DescName, 
+                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
+    
+    # display if cardArray not empty
+    if cardArray:
+        place_card(cardArray)
+        
+    connect_db.commit
+    connect_db.close()
+   #('NONE','UI', 'CALL', 'TESTING') 
+    
 main()
