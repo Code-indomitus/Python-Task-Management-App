@@ -333,6 +333,11 @@ def display(cardArray):
 
 
 def editTask(taskNumber):
+    #create a new window
+    newWindow = Toplevel(MainWindow)
+    newWindow.geometry("300x300")
+    newWindow.title("edit task")
+    
     #connect to database
     sqliteConnection = sqlite3.connect('tasks.db')
     #connect to cursor
@@ -361,11 +366,6 @@ def editTask(taskNumber):
     DescAssign.set(record[5])
     DescTag.set(record[6])
 
-    #create a new window
-    newWindow = Toplevel(MainWindow)
-    newWindow.geometry("300x300")
-    newWindow.title("edit task")
-
     #making label
     editName = Label(newWindow, text = "Name")
     editDesc = Label(newWindow, text = "Description")
@@ -390,7 +390,7 @@ def editTask(taskNumber):
     entry5 = Combobox(newWindow,  textvariable = DescStatus)
     entry6 = Combobox(newWindow,  textvariable = DescAssign)
     entry7 = Combobox(newWindow,  textvariable = DescTag)
-
+    
     entry1.grid(row = 1, column = 1, pady=5, sticky = "w")
     entry2.grid(row = 2, column = 1, pady=5, sticky = "w")
     entry3.grid(row = 3, column = 1, pady=5, sticky = "w")
@@ -409,6 +409,7 @@ def editTask(taskNumber):
     entry6['state'] = 'readonly'
     entry7['state'] = 'readonly'
 
+
     def update():
         #connect to database
         sqliteConnection = sqlite3.connect('tasks.db')
@@ -424,6 +425,7 @@ def editTask(taskNumber):
         sqliteConnection.close()
 
         newWindow.destroy()
+
     
     editButton = Button(newWindow, text = "edit", command = update)
     editButton.grid(row = 8, column = 2, pady=5, sticky = "w")
@@ -445,7 +447,8 @@ def delete(mainFrame, taskNumber):
     sql_update_query = """DELETE from tasks where id = ?"""
     cursor.execute(sql_update_query, (taskNumber,))
     sqliteConnection.commit()
-    sqliteConnection.close()
     cursor.close()
+    sqliteConnection.close()
+    
     
 main()
