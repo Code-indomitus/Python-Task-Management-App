@@ -42,6 +42,8 @@ def main():
     tags['values'] = ('NONE','UI', 'CALL', 'TESTING')
     tags['state'] = 'readonly'
     tags.current(0)
+
+    tags.bind('<<ComboboxSelected>>',lambda _ : selected(current_tag))
     
     # create spacing in grid for C1 and C6
     spaceStart = Frame(mainWindow, width=50, height=50)
@@ -332,5 +334,20 @@ def display(cardArray):
     
 def do_nothing():
     pass
+
+def selected(current_tag):
+    
+    if current_tag.get()=='UI':
+        print('UI')
+
+    elif current_tag.get()=='CALL':
+        print('CALL')
+
+    elif current_tag.get()=='TESTING':
+        print('TESTING')
+
+def filtering(arg):
+    pass
+    
 
 main()
