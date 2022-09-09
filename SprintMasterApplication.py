@@ -469,15 +469,13 @@ def filter(tag):
     global cardStorage
     global newCardList
     if tag == 'NONE':
-        cardStorage = []
         for card in cardStorage:
             card.destroy()
         for card in newCardList:
             card.destroy()
+        cardStorage = []
         display(cardStorage) 
         return
-    
-
 
     for card in cardStorage:
         card.destroy()
