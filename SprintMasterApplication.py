@@ -459,6 +459,12 @@ def delete(mainFrame, taskNumber):
     cursor.close()
     sqliteConnection.close()
 
+    global cardStorage
+    for card in cardStorage:
+        card.destroy()
+    cardStorage = []
+    display(cardStorage)
+
 def filter(tag):
     global cardStorage
     if tag == 'NONE':
