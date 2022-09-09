@@ -29,7 +29,7 @@ def main():
     # attributes
 
     # create master window
-    requiredRow = 8
+    requiredRow = 9
     requiredCol = 6
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
     MainWindow = mainWindow
@@ -55,8 +55,8 @@ def main():
     tags.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
     startRow, startCol, spanRow, spanCol = 2, 4, 1, 1 # filter:
     filterLabel.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
-    startRow, startCol, spanRow, spanCol = 2, 3, 1, 1 # filter button:
-    filterButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e")
+    startRow, startCol, spanRow, spanCol = 3, 1, 1, 5 # filter button:
+    filterButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e", padx = 10)
     startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
@@ -186,7 +186,7 @@ def createNewTaskWindow():
 
     current_assigned_to = StringVar()
     assigned_to = Combobox(frame, textvariable = current_assigned_to)
-    assigned_to['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tion Yue Khoo')
+    assigned_to['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
     assigned_to['state'] = 'readonly'
     assigned_to.current(0)
     assigned_to.place(x = 140, y = 200)
@@ -405,7 +405,7 @@ def editTask(taskNumber):
 
     entry4['values'] = ('Low', 'Medium', 'High', 'Critical')
     entry5['values'] = ('Not Started', 'In Progress', 'Complete')
-    entry6['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tion Yue Khoo')
+    entry6['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
     entry7['values'] = ('UI', 'CALL', 'TESTING')
     
     entry4['state'] = 'readonly'
