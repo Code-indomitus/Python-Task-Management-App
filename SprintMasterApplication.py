@@ -467,8 +467,11 @@ def delete(mainFrame, taskNumber):
 
 def filter(tag):
     global cardStorage
+    global newCardList
     if tag == 'NONE':
         cardStorage = []
+        for card in cardStorage:
+            card.destroy()
         for card in newCardList:
             card.destroy()
         display(cardStorage) 
@@ -478,7 +481,9 @@ def filter(tag):
 
     for card in cardStorage:
         card.destroy()
-    
+    for card in newCardList:
+        card.destroy()
+    newCardList = []
     displayFilter(newCardList, tag)
 
 def displayFilter(cardArray, tag):
