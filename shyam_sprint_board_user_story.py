@@ -5,6 +5,8 @@ from queue import Empty
 from tkinter import *
 from tkinter import messagebox
 from tkinter.ttk import Combobox
+from turtle import width
+from tkcalendar import DateEntry
 import sqlite3
 
 
@@ -21,11 +23,16 @@ def createNewSprintWindow():
         # Create cusror
         cursor = connect_db.cursor()
 
-        connect_db.execute("INSERT INTO tasks VALUES (:sprint_name, :start_date, :end_date)", 
+        cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sprints
+                ([sprint_name], [start_date], [end_date])
+                ''')
+
+        connect_db.execute("INSERT INTO sprints VALUES (:sprint_name, :start_date, :end_date)", 
                         {
                             'sprint_name': sprint_name_entry.get(),
-                            'start_date': start_date_entry.get(),
-                            'end_date': end_date_entry.get(),
+                            'start_date': start_date_entry.get_date().strftime("%m/%d/%Y"),
+                            'end_date': end_date_entry.get_date().strftime("%m/%d/%Y")
                         }
                        
                             )
@@ -49,7 +56,7 @@ def createNewSprintWindow():
     newSprintWindow.title("New Sprint")
  
     # sets the geometry of toplevel
-    newSprintWindow.geometry("300x300")
+    newSprintWindow.geometry("400x400")
 
 
     frame = Frame(newSprintWindow, width = 400, height = 400)
@@ -64,16 +71,17 @@ def createNewSprintWindow():
     end_date = Label(frame, text = "End Date:")
     end_date.place(x = 20, y = 140)
 
-    sprint_name_entry = Entry(frame, width = 25)
-    start_date_entry = Entry(frame, width = 25)
-    end_date_entry = Entry(frame, width = 25)
+    sprint_name_entry = Entry(frame, width = 40)
+    start_date_entry = DateEntry(frame,selectmode='day')  # Date entry allows user to get date input using a calendar. The date input is in datetime.date format/object
+    end_date_entry = DateEntry(frame,selectmode='day')
     sprint_name_entry.place(x = 110, y = 50)
     start_date_entry.place(x = 110, y = 90)
     end_date_entry.place(x = 110, y = 140)
 
 
+
     createButton = Button(frame, text = "Create Sprint", command = create)
-    createButton.place(x = 125, y = 290)
+    createButton.place(x = 110, y = 290)
 
     discardButton = Button(frame, text = "Discard Sprint", command = newSprintWindow.destroy)
     discardButton.place(x = 225, y = 290)
