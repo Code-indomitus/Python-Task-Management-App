@@ -7,8 +7,6 @@ from tkinter import messagebox
 from tkinter.ttk import Combobox
 import sqlite3
 
-# TODO: replace do_nothing() with edit functionality (line 235)
-# TODO: replace do_nothing() with delete functionality (line 236)
 MainWindow = None
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
@@ -39,7 +37,7 @@ def main():
     current_tag = StringVar()
     tags = Combobox(mainWindow, textvariable = current_tag)
 
-    tags['values'] = ('NONE','UI', 'CALL', 'TESTING')
+    tags['values'] = ('ALL','UI', 'CORE', 'TESTING')
     tags['state'] = 'readonly'
     tags.current(0)
     
@@ -105,7 +103,7 @@ def createNewTaskWindow():
         
         # show card immediately after task creation
         create_task_card(cardStorage, currentTaskNumber, 
-                         entry1.get(), entry2.get(), priority.get(), entry3.get(), status.get(),assigned_to.get())
+                         entry1.get(), entry2.get(), priority.get(), entry3.get(), status.get(),assigned_to.get(), tag.get())
         
         currentRow = 4 + math.floor((len(cardStorage)-1)//4) # determine row and col to print
         currentCol = currentTaskNumber - (currentRow-4)*4 + 1
@@ -193,7 +191,7 @@ def createNewTaskWindow():
 
     current_tag = StringVar()
     tag = Combobox(frame, textvariable = current_tag)
-    tag['values'] = ('UI', 'CALL', 'TESTING')
+    tag['values'] = ('UI', 'CORE', 'TESTING')
     tag['state'] = 'readonly'
     tag.current(0)
     tag.place(x = 140, y = 230)
@@ -226,67 +224,68 @@ def add_label(displayText):
 
 # create card to represent a task in display
 def create_task_card(cardStorage, taskNumber, 
-                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign):
+                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag):
     # main frame for card
     mainFrame = Frame(MainWindow, width=280, height=200, highlightbackground="gray", highlightthickness=2)
     # card split into 9Rx8C; cells evenly sized
-    for i in range(1, 10): #R1-R9
+    for i in range(1, 8): #R1-R8
         mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
     for i in range(2, 9-1): #C2-C8
         mainFrame.grid_columnconfigure(i, weight = 1, uniform = "cardcolumns")
     mainFrame.grid_propagate(0) # stop auto resize
     
     # print fields and buttons for card
-    cardNum = Label(mainFrame, text = "Task ", font=("Arial" ,8, "bold"))
+    cardNum = Label(mainFrame, text = "Task ", font=("Arial", 10, "bold"))
     cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8), command = lambda: editTask(taskNumber))
     cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command = lambda: delete(mainFrame, taskNumber))
     cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
-    cardDescDesc = Label(mainFrame, text = "Description: ", font=("Arial" ,8, "bold"))
     cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
     cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
-    cardDescStatus = Label(mainFrame, text = "Status: ", font=("Arial" ,8, "bold"))
-    cardDescAssign = Label(mainFrame, text = "Assigned to: ", font=("Arial" ,8, "bold"))
+    cardDescTag = Label(mainFrame, text = "Tag: ", font=("Arial" ,8, "bold"))
     
     # print variable data from database
-    variableCardNum = Label(mainFrame, text = taskNumber, font=("Arial" ,8, "bold"))        
+    variableCardNum = Label(mainFrame, text = taskNumber, font=("Arial" , 10, "bold"))        
     variableDescName = Label(mainFrame, text = DescName)
-    variableDescDesc = Label(mainFrame, text = DescDesc)
     variableDescPriority = Label(mainFrame, text = DescPriority)
     variableDescPoints = Label(mainFrame, text = DescPoints)
-    for status in ["Not Started", "In Progress", "Complete"]:
-        if DescStatus == status:
-            variableDescStatus = Label(mainFrame, text = status)
-            break
-    variableDescAssign = Label(mainFrame, text = DescAssign)
+    variableDescTag = Label(mainFrame, text = DescTag)
     
     # position of fields and buttons within card
     frontSpace = Label(mainFrame, width=200, height=1, bg = "gray") # coloured status bar
     if DescStatus == "Not Started":
-        frontSpace.config(fg = "#FF0000", bg = "#FF0000")
+        frontSpace.config(fg = "#000000", bg = "#FF0000", text = "Not started")
     elif DescStatus == "In Progress":
-        frontSpace.config(fg = "#FFD800", bg = "#FFD800")
+        frontSpace.config(fg = "#000000", bg = "#FFD800", text = "In Progress")
     elif DescStatus == "Complete":
-        frontSpace.config(fg = "#3AFF00", bg = "#3AFF00")
-    frontSpace.grid(row = 2, column = 1, columnspan = 8, padx = 3, pady = 3)
+        frontSpace.config(fg = "#000000", bg = "#3AFF00", text = "Complete")
+    frontSpace.grid(row = 2, column = 1, columnspan = 8, padx = 3, pady = 1)
+    
+    priorityBox = Label(mainFrame, width=2, height=1, bg = "gray", highlightbackground="black", highlightthickness=1) # coloured priority box
+    if DescPriority == "Low":
+        priorityBox.config(bg = "#FFD800")
+    elif DescPriority == "Medium":
+        priorityBox.config(bg = "#FFD800")
+    elif DescPriority == "High":
+        priorityBox.config(bg = "#3AFF00")
+    elif DescPriority == "Critical":
+        priorityBox.config(text = "!", font=("Arial" , 9, "bold"),
+                           fg = "#FF0000", bg = "#FFFFFF", highlightbackground="red", highlightthickness=1)
+    priorityBox.grid(row = 1, column = 6, padx = 3, pady = 3)
     
     cardNum.grid(row = 1, column = 2, columnspan = 1, padx = 2, pady = 2, sticky = "w")
     cardEditTask.grid(row = 1, column = 7, padx = 2, pady = 2, sticky = "e")
     cardDelete.grid(row = 1, column = 8, padx = 2, pady = 2, sticky = "w")
     cardDescName.grid(row = 3, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescDesc.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescPriority.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescPoints.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescStatus.grid(row = 7, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
-    cardDescAssign.grid(row = 8, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescPriority.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescPoints.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+    cardDescTag.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
     
     # position of variables within card
     variableCardNum.grid(row = 1, column = 3, columnspan = 1, padx = 2, pady = 2, sticky = "w")
     variableDescName.grid(row = 3, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
-    variableDescDesc.grid(row = 4, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
-    variableDescPriority.grid(row = 5, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
-    variableDescPoints.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
-    variableDescStatus.grid(row = 7, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
-    variableDescAssign.grid(row = 8, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescPriority.grid(row = 4, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescPoints.grid(row = 5, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+    variableDescTag.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
     
     # add card to array
     cardStorage.append(mainFrame)
@@ -324,9 +323,9 @@ def display(cardArray):
     # [7]: id
 
     for row in rows:
-        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[7]
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7]
         create_task_card(cardArray, taskNumber, DescName, 
-                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
+                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag)
     
     # display if cardArray not empty
     if cardArray:
@@ -406,7 +405,7 @@ def editTask(taskNumber):
     entry4['values'] = ('Low', 'Medium', 'High', 'Critical')
     entry5['values'] = ('Not Started', 'In Progress', 'Complete')
     entry6['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
-    entry7['values'] = ('UI', 'CALL', 'TESTING')
+    entry7['values'] = ('UI', 'CORE', 'TESTING')
     
     entry4['state'] = 'readonly'
     entry5['state'] = 'readonly'
@@ -468,7 +467,7 @@ def delete(mainFrame, taskNumber):
 def filter(tag):
     global cardStorage
     global newCardList
-    if tag == 'NONE':
+    if tag == 'ALL':
         for card in cardStorage:
             card.destroy()
         for card in newCardList:
@@ -517,6 +516,6 @@ def displayFilter(cardArray, tag):
         
     connect_db.commit
     connect_db.close()
-   #('NONE','UI', 'CALL', 'TESTING') 
+   #('ALL','UI', 'CORE', 'TESTING') 
     
 # main()
