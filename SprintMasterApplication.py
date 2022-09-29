@@ -519,4 +519,4 @@ def displayFilter(cardArray, tag):
     connect_db.close()
    #('NONE','UI', 'CALL', 'TESTING') 
     
-main()
+# main()
