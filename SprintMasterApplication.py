@@ -5,9 +5,11 @@ from queue import Empty
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
-
+from tkcalendar import DateEntry
 from tkinter.ttk import Combobox
 import sqlite3
+from tasks import *
+from task_sorting import *
 
 MainWindow = None
 TaskTab = None
@@ -15,6 +17,7 @@ SprintTab = None
 TeamTab = None
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
+sprintCardStorage = [] # card list for sprints
 def main():
     
     # connect to database during start
@@ -42,12 +45,15 @@ def main():
     notebook.grid(pady = 15)
 
     task_tab = Frame(notebook, width = 2000, height = 630)
-    sprint_tab = Frame(notebook, width = 2000, height = 630, bg = "blue")
+    sprint_tab = Frame(notebook, width = 2000, height = 630)
     team_tab = Frame(notebook, width = 2000, height = 630, bg = "purple")
 
     # task_tab.pack(fill = "both", expand = 1)
     task_tab.grid_rowconfigure(requiredRow, weight = 1)
     task_tab.grid_columnconfigure(requiredCol, weight = 1)
+
+    sprint_tab.grid_rowconfigure(requiredRow, weight = 1)
+    sprint_tab.grid_columnconfigure(requiredCol, weight = 1)
     # sprint_tab.pack(fill = "both", expand = 1)
     # team_tab.pack(fill = "both", expand = 1)
 
@@ -59,7 +65,7 @@ def main():
     SprintTab = sprint_tab
     TeamTab = team_tab
 
-    # Shyam
+    # Task Board widgets
     createTaskButton = Button(task_tab, text = "Create New Task", command = createNewTaskWindow)
     filterLabel = Label(task_tab ,text = "Filter: ") 
     current_tag = StringVar()
@@ -86,20 +92,138 @@ def main():
     startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
+    # Sprint Board widgets
+    createSprintButton = Button(sprint_tab, text = "Create New Sprint", command = createNewSprintWindow)
+    createSprintButton.place(x = 50, y = 20)
+
     # add tabs to the notebook
     notebook.add(task_tab, text = "Task Board")
     notebook.add(sprint_tab, text = "Sprint Board")
     notebook.add(team_tab, text = "Team Board")
     
-    # display all cards
+    # display all task cards
     display(cardStorage)
+
+    # display all sprint cards
+    names, status, start, end = get_sprints_details()
+    create_sprint_display(sprint_tab, names, status, start, end)
     
     # run   
     mainWindow.mainloop()
 
+def get_sprints_details():
+     # connect to database
+    connect_db = sqlite3.connect("sprints.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
+    # select all data from table    
+    cursor.execute("SELECT * from sprints")
+    sprints = cursor.fetchall()
+    
+    sprintNames = []
+    sprintStatus = []
+    sprintStart = []
+    sprintEnd = []
+    
+    # [0]: sprint_name
+    # [1]: start_date
+    # [2]: end_date
+    # [3]: status
+    
+    for sprint in sprints:
+        sprintNames.append(sprint[0])
+        sprintStatus.append(sprint[3])
+        sprintStart.append(sprint[1])
+        sprintEnd.append(sprint[2])
+        
+    # print(sprintNames); print(sprintStatus)
+    
+    return sprintNames, sprintStatus, sprintStart, sprintEnd
+def createNewSprintWindow():
+
+    def createSprint():
+        # Create/Connect to a database
+        connect_db = sqlite3.connect('sprints.db')
+        # Create cusror
+        cursor = connect_db.cursor()
+
+        cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sprints
+                ([sprint_name], [start_date], [end_date], [status])
+                ''')
+
+        connect_db.execute("INSERT INTO sprints VALUES (:sprint_name, :start_date, :end_date, :status)", 
+                        {
+                            'sprint_name': sprint_name_entry.get(),
+                            'start_date': start_date_entry.get_date().strftime("%m/%d/%Y"),
+                            'end_date': end_date_entry.get_date().strftime("%m/%d/%Y"),
+                            'status': 'Not started' # default status
+                        }
+                            )
+        
+        # Commit changes
+        connect_db.commit()
+        # Close Connnection
+        connect_db.close()
+
+        # Clear input boxes
+        sprint_name_entry.delete(0, END)
+        start_date_entry.delete(0, END)
+        end_date_entry.delete(0, END)
+
+        global sprintCardStorage
+
+        for card in sprintCardStorage:
+            card.destroy()
+        
+        sprintCardStorage = []
+        names, status, start, end = get_sprints_details()
+
+        create_sprint_display(SprintTab, names, status, start, end)
+
+
+    # Toplevel object which will
+    # be treated as a new window
+    newSprintWindow = Toplevel(MainWindow)
+ 
+    # sets the title of the
+    # Toplevel widget
+    newSprintWindow.title("New Sprint")
+ 
+    # sets the geometry of toplevel
+    newSprintWindow.geometry("400x400")
+
+
+    frame = Frame(newSprintWindow, width = 400, height = 400)
+    frame.pack()
+
+    sprint_name = Label(frame, text = "Sprint Name:")
+    sprint_name.place(x = 20, y = 50)
+
+    start_date = Label(frame, text = "Start Date:")
+    start_date.place(x = 20, y = 90)
+
+    end_date = Label(frame, text = "End Date:")
+    end_date.place(x = 20, y = 140)
+
+    sprint_name_entry = Entry(frame, width = 40)
+    start_date_entry = DateEntry(frame,selectmode='day')  # Date entry allows user to get date input using a calendar. The date input is in datetime.date format/object
+    end_date_entry = DateEntry(frame,selectmode='day')
+    sprint_name_entry.place(x = 110, y = 50)
+    start_date_entry.place(x = 110, y = 90)
+    end_date_entry.place(x = 110, y = 140)
+
+    createButton = Button(frame, text = "Create Sprint", command = createSprint)
+    createButton.place(x = 110, y = 290)
+
+    discardButton = Button(frame, text = "Discard Sprint", command = newSprintWindow.destroy)
+    discardButton.place(x = 225, y = 290)
+
 def createNewTaskWindow():
 
-    def create():
+    def createTask():
 
         # Create/Connect to a database
         connect_db = sqlite3.connect('tasks.db')
@@ -224,7 +348,7 @@ def createNewTaskWindow():
     tag.current(0)
     tag.place(x = 140, y = 230)
 
-    createButton = Button(frame, text = "Create", command = create)
+    createButton = Button(frame, text = "Create", command = createTask)
     createButton.place(x = 125, y = 350)
 
     discardButton = Button(frame, text = "Close", command = newTaskWindow.destroy)
@@ -363,6 +487,81 @@ def display(cardArray):
     connect_db.commit
     connect_db.close()
 
+def create_sprint_display(mainSprintWindow, sprintNames, sprintStatus, sprintStart, sprintEnd):
+    
+    # main frame with all sprints and their status displayed
+    mainDisplay = Frame(mainSprintWindow, width=300, height=300)
+    mainDisplay.place(x = 10, y = 100)
+    global sprintCardStorage
+    sprintCardStorage.append(mainDisplay)
+    
+    # grid configure
+    mainDisplay.grid_rowconfigure(5, weight = 1)
+    mainDisplay.grid_columnconfigure(6, weight = 1)
+    
+    # border spacing
+    Label(mainDisplay, width = 5).grid(row = 0, column = 0)
+    Label(mainDisplay, width = 5).grid(row = 0, column = 6)
+    
+    row = 1 
+    col = 1
+        
+    for i in range(len(sprintNames)):
+        
+        if col > 5:
+            #Label(mainDisplay, text = "ROWSPACE", font=("Arial" ,8, "bold"), bg = "#FF0000" ,width = 10, height = 2).grid(
+            #row = row + 2, column = 0, columnspan = 6)
+            row += 3
+            col = 1
+            
+        if sprintStatus[i] == "Not started":
+            colour = "#D80000"
+        if sprintStatus[i] == "In progress":
+            colour = "#FFEC00"
+        elif sprintStatus[i] == "Complete":
+            colour = "#4CFF00"
+        
+        # frame for a sprint
+        sprintFrame = Frame(mainDisplay, width=30, height=40, 
+                            highlightbackground = "black", highlightthickness=1)
+        
+        sprintFrame.grid_rowconfigure(6, weight = 1)
+        sprintFrame.grid_columnconfigure(2, weight = 1)
+        
+        sprintFrame.grid(row = row, column = col, padx = 8, pady = (0, 15))
+        
+        sprintFrame.config(bg = "#FFFFFF")
+        
+        # sprint name
+        curr = Label(sprintFrame, text = sprintNames[i], font=("Arial" ,8, "bold"), 
+                     bg = colour, fg = "#000000", width = 30, justify=LEFT, anchor = "w")
+        curr.grid(row = 1, column = 1, columnspan = 2, sticky = W)
+        # sprint status
+        curr = Label(sprintFrame, text = f"Status:         {sprintStatus[i]}", font=("Arial" ,8),
+                     bg = "#FFFFFF", width = 35, justify=LEFT, anchor = "w")  
+        curr.grid(row = 2, column = 1, columnspan = 2, sticky = W)
+        
+        # start date
+        curr = Label(sprintFrame, text = f"Start Date:   {sprintStart[i]}", font=("Arial" ,8),
+                     bg = "#FFFFFF", width = 35, justify=LEFT, anchor = "w")  
+        curr.grid(row = 3, column = 1, columnspan = 2, sticky = W)
+        
+        # end date
+        curr = Label(sprintFrame, text = f"Start Date:   {sprintEnd[i]}", font=("Arial" ,8),
+                     bg = "#FFFFFF", width = 35, justify=LEFT, anchor = "w")  
+        curr.grid(row = 4, column = 1, columnspan = 2, sticky = W)
+        
+        # details button
+        detailsButton = Button(sprintFrame, text = "Details", anchor = E, font=("Arial" ,8, "bold")
+                            , command = lambda: init_tasks_for_sprint(MainWindow))
+        detailsButton.grid(row = 5, column = 1, pady = 5, sticky = E)
+        
+        # edit button
+        editButton = Button(sprintFrame, text = "Edit", anchor = W, font=("Arial" ,8, "bold")
+                            , command = lambda: init_swap(MainWindow))
+        editButton.grid(row = 5, column = 2, pady = 5, sticky = W)
+
+        col += 1
 
 def editTask(taskNumber):
     #create a new window
@@ -549,5 +748,59 @@ def displayFilter(cardArray, tag):
     connect_db.commit
     connect_db.close()
    #('ALL','UI', 'CORE', 'TESTING') 
+
+def init_swap(root):
+    ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
+    # create top level window for task display
+    sprintTasksDisplay = Toplevel(root, height=400, width=800)
+    
+    rows = 4
+    cols = 6
+    
+    # set up grid
+    sprintTasksDisplay.grid_rowconfigure(rows, weight = 1)
+    sprintTasksDisplay.grid_columnconfigure(cols, weight = 1)
+    
+    # window title
+    # TODO: get title of sprint using database
+    title = Label(sprintTasksDisplay, text = "Manage Sprint", anchor = CENTER)
+    title.grid(row = 1, column = 1, columnspan = 5, pady = (15,20))
+    
+    # spacing
+    Label(sprintTasksDisplay, width = 26).grid(row = 2, column = 1)
+    Label(sprintTasksDisplay, width = 26).grid(row = 2, column = 5)
+    Label(sprintTasksDisplay, width = 26).grid(row = 2, column = 3)
+    
+    # labels for table
+    productBacklog = Label(sprintTasksDisplay, text = "Product Backlog", font = ("Arial" ,8, "bold"),
+                            bg = "#82CCFF", fg = "#000000", highlightbackground = "#82CCFF", highlightthickness = 2,
+                            anchor = CENTER, width = 40)
+    productBacklog.grid(row = 2, column = 2, sticky = "s", padx = 1)
+    
+    sprintBacklog = Label(sprintTasksDisplay, text = "Sprint Backlog", font = ("Arial" ,8, "bold"),
+                            bg = "#F6FF82", fg = "#000000", highlightbackground = "#F6FF82", highlightthickness = 2,
+                            anchor = CENTER, width = 40)
+    sprintBacklog.grid(row = 2, column = 4, sticky = "s", padx = 1)
+    
+    # boxes to place cards
+    productBacklogFrame = Frame(sprintTasksDisplay, bg = "#FFFFFF", highlightbackground = "#82CCFF", highlightthickness = 2,
+                            height = 300, width = 40)
+    productBacklogFrame.grid(row = 3, column = 2, sticky = N+S+E+W, padx = 1)
+    
+    sprintBacklogFrame = Frame(sprintTasksDisplay, bg = "#FFFFFF", highlightbackground = "#F6FF82", highlightthickness = 2,
+                            height = 300, width = 40)
+    sprintBacklogFrame.grid(row = 3, column = 4, sticky = N+S+E+W, padx = 1)
+    
+    scroll = Scrollbar(sprintTasksDisplay)
+    scroll.grid(row = 2, column = 6, rowspan = rows, sticky = "ne")
+    
+    # buttons
+    # start
+    startButton = Button(sprintTasksDisplay, text = " Get Started ", anchor = CENTER)
+    startButton.grid(row = 4, column = 2, padx = 1, sticky = "e")
+    
+    # save and exit
+    saveButton = Button(sprintTasksDisplay, text = " Save and Exit ", anchor = CENTER)
+    saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
 main()

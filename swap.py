@@ -3,7 +3,6 @@ from tkinter.ttk import Combobox
 from tkcalendar import DateEntry
 import sqlite3
 from SprintMasterApplication import *
-from SprintMasterApplication_v2 import *
 
 def init_swap(root):
     ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
