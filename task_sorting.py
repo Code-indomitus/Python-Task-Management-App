@@ -3,6 +3,7 @@ from tkinter.ttk import Combobox
 from tkcalendar import DateEntry
 import sqlite3
 from SprintMasterApplication import *
+from SprintMasterApplication_v2 import *
 
 def init_tasks_for_sprint(root):
     ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
@@ -64,6 +65,26 @@ def init_tasks_for_sprint(root):
 def get_sprint_tasks():
     ''' Retrieves tasks belonging to a particular sprint '''
     # get tasks
+    # connect to database
+    connect_db = sqlite3.connect("sprints.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
+    # select all data from table    
+    cursor.execute("SELECT * from sprints")
+    sprints = cursor.fetchall()
+    
+    sprintStatus = []
+    
+    # [0]: sprint_name
+    # [1]: start_date
+    # [2]: end_date
+    # [3]: status
+    
+    # for sprint in sprints:
+    #     if sprint[3] == 
+    
     pass
 
 def display_tasks_of_sprint():
@@ -76,10 +97,19 @@ def display_tasks_of_sprint():
 def complete_sprint(title):
     ''' Updates sprint status to "Complete" when button is pressed '''
     # match sprint title in database
+    # connect to database
+    connect_db = sqlite3.connect("sprints.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+        
     # set status to "Complete"
-    pass
+    query = '''SELECT status from sprints WHERE sprint_name=title'''
+    update = "Complete"
+    cursor.execute(query, (update,))
+    connect_db.commit()
 
-# TODO: refresh sprint page?
+    # TODO: refresh sprint page?
     
 root = Tk()
 root.geometry("1200x600")
