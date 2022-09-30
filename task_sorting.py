@@ -111,11 +111,11 @@ def complete_sprint(title):
 
     # TODO: refresh sprint page?
     
-root = Tk()
-root.geometry("1200x600")
-root.title("Main")
+# root = Tk()
+# root.geometry("1200x600")
+# root.title("Main")
 
-button = Button(text = "More", command= lambda:init_tasks_for_sprint(root))
-button.place(x=20, y=20)
+# button = Button(text = "More", command= lambda:init_tasks_for_sprint(root))
+# button.place(x=20, y=20)
    
-root.mainloop()
+# root.mainloop()

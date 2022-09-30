@@ -59,11 +59,11 @@ def init_swap(root):
     saveButton = Button(sprintTasksDisplay, text = " Save and Exit ", anchor = CENTER)
     saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
-root = Tk()
-root.geometry("1200x600")
-root.title("Main")
+# root = Tk()
+# root.geometry("1200x600")
+# root.title("Main")
 
-button = Button(text = "More", command= lambda:init_swap(root))
-button.place(x=20, y=20)
+# button = Button(text = "More", command= lambda:init_swap(root))
+# button.place(x=20, y=20)
    
-root.mainloop()
+# root.mainloop()
