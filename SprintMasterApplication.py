@@ -7,10 +7,13 @@
 # from tkinter.ttk import Combobox
 # import sqlite3
 
-# MainWindow = None
-# cardStorage = [] # stores tasks as cards
-# newCardList = [] # card list for the 
-# def main():
+MainWindow = None
+TaskTab = None
+SprintTab = None
+TeamTab = None
+cardStorage = [] # stores tasks as cards
+newCardList = [] # card list for the 
+def main():
     
 #     # connect to database during start
 #     connect_db = sqlite3.connect('tasks.db')
@@ -26,16 +29,17 @@
           
 #     # attributes
 
-#     # create master window
-#     requiredRow = 9
-#     requiredCol = 6
-#     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
-#     MainWindow = mainWindow
-#     # Shyam
-#     createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow)
-#     filterLabel = Label(mainWindow ,text = "Filter: ") 
-#     current_tag = StringVar()
-#     tags = Combobox(mainWindow, textvariable = current_tag)
+    # create master window
+    requiredRow = 9
+    requiredCol = 6
+    mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
+    MainWindow = mainWindow
+    
+    # Shyam
+    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow)
+    filterLabel = Label(mainWindow ,text = "Filter: ") 
+    current_tag = StringVar()
+    tags = Combobox(mainWindow, textvariable = current_tag)
 
 #     tags['values'] = ('ALL','UI', 'CORE', 'TESTING')
 #     tags['state'] = 'readonly'
@@ -508,10 +512,10 @@
 #     # [6]: tag
 #     # [7]: id
 
-#     for row in rows:
-#         DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[7]
-#         create_task_card(cardArray, taskNumber, DescName, 
-#                          DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
+    for row in rows:
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7]
+        create_task_card(cardArray, taskNumber, DescName, 
+                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag)
     
 #     # display if cardArray not empty
 #     if cardArray:
