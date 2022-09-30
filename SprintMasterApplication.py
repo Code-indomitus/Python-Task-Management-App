@@ -8,6 +8,9 @@ from tkinter.ttk import Combobox
 import sqlite3
 
 MainWindow = None
+TaskTab = None
+SprintTab = None
+TeamTab = None
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 def main():
@@ -31,6 +34,7 @@ def main():
     requiredCol = 6
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
     MainWindow = mainWindow
+    
     # Shyam
     createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow)
     filterLabel = Label(mainWindow ,text = "Filter: ") 
@@ -509,9 +513,9 @@ def displayFilter(cardArray, tag):
     # [7]: id
 
     for row in rows:
-        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[7]
+        DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7]
         create_task_card(cardArray, taskNumber, DescName, 
-                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign)
+                         DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag)
     
     # display if cardArray not empty
     if cardArray:
