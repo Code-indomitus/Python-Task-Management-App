@@ -435,8 +435,11 @@ def editTask(taskNumber):
         display(cardStorage)
 
     
-    editButton = Button(newWindow, text = "edit", command = update)
+    editButton = Button(newWindow, text = "confirm", command = update)
     editButton.grid(row = 8, column = 2, pady=5, sticky = "w")
+
+    editButton = Button(newWindow, text = "delete", command = lambda: delete(newWindow, taskNumber))
+    editButton.grid(row = 8, column = 1, pady=5, sticky = "w")
 
     cursor.close()
     sqliteConnection.close()
@@ -518,4 +521,4 @@ def displayFilter(cardArray, tag):
     connect_db.close()
    #('ALL','UI', 'CORE', 'TESTING') 
     
-# main()
+main()
