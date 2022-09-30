@@ -4,6 +4,8 @@ from msilib.schema import ComboBox
 from queue import Empty
 from tkinter import *
 from tkinter import messagebox
+from tkinter import ttk
+
 from tkinter.ttk import Combobox
 import sqlite3
 
@@ -35,20 +37,42 @@ def main():
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
     MainWindow = mainWindow
     
+    # setup tabs
+    notebook = ttk.Notebook(mainWindow)
+    notebook.grid(pady = 15)
+
+    task_tab = Frame(notebook, width = 2000, height = 630)
+    sprint_tab = Frame(notebook, width = 2000, height = 630, bg = "blue")
+    team_tab = Frame(notebook, width = 2000, height = 630, bg = "purple")
+
+    # task_tab.pack(fill = "both", expand = 1)
+    task_tab.grid_rowconfigure(requiredRow, weight = 1)
+    task_tab.grid_columnconfigure(requiredCol, weight = 1)
+    # sprint_tab.pack(fill = "both", expand = 1)
+    # team_tab.pack(fill = "both", expand = 1)
+
+    global TaskTab
+    global SprintTab
+    global TeamTab
+
+    TaskTab = task_tab
+    SprintTab = sprint_tab
+    TeamTab = team_tab
+
     # Shyam
-    createTaskButton = Button(mainWindow, text = "Create New Task", command = createNewTaskWindow)
-    filterLabel = Label(mainWindow ,text = "Filter: ") 
+    createTaskButton = Button(task_tab, text = "Create New Task", command = createNewTaskWindow)
+    filterLabel = Label(task_tab ,text = "Filter: ") 
     current_tag = StringVar()
-    tags = Combobox(mainWindow, textvariable = current_tag)
+    tags = Combobox(task_tab, textvariable = current_tag)
 
     tags['values'] = ('ALL','UI', 'CORE', 'TESTING')
     tags['state'] = 'readonly'
     tags.current(0)
     
-    filterButton = Button(mainWindow, text = "FILTER", command = lambda: filter(tags.get()))
+    filterButton = Button(task_tab, text = "FILTER", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
-    spaceStart = Frame(mainWindow, width=50, height=50)
-    spaceEnd = Frame(mainWindow, width=50, height=50)
+    spaceStart = Frame(task_tab, width=50, height=50)
+    spaceEnd = Frame(task_tab, width=50, height=50)
     spaceStart.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
     spaceEnd.grid(row = 3, column = 6, padx = 3, pady = 3, sticky = "ne")
 
@@ -62,10 +86,10 @@ def main():
     startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
     createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
     
-    # create "Sprint Master" label
-    labelSprintMaster = add_label("Sprint Master")
-    startRow, startCol, spanRow, spanCol = 1, 1, 1, 6
-    labelSprintMaster.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol)
+    # add tabs to the notebook
+    notebook.add(task_tab, text = "Task Board")
+    notebook.add(sprint_tab, text = "Sprint Board")
+    notebook.add(team_tab, text = "Team Board")
     
     # display all cards
     display(cardStorage)
@@ -229,8 +253,9 @@ def add_label(displayText):
 # create card to represent a task in display
 def create_task_card(cardStorage, taskNumber, 
                      DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag):
+    global TaskTab
     # main frame for card
-    mainFrame = Frame(MainWindow, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+    mainFrame = Frame(TaskTab, width=280, height=200, highlightbackground="gray", highlightthickness=2)
     # card split into 9Rx8C; cells evenly sized
     for i in range(1, 8): #R1-R8
         mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
