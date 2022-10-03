@@ -15,6 +15,7 @@ MainWindow = None
 TaskTab = None
 SprintTab = None
 TeamTab = None
+SprintDisplay = None # Child frame of sprint tab for the better
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
@@ -61,6 +62,9 @@ def main():
     sprintDisplay.grid_columnconfigure(5, weight = 1)
     sprintDisplay.grid_propagate(False)
     sprintDisplay.grid(row = 1, column = 2, sticky = "", pady = (5,10))
+
+    global SprintDisplay 
+    SprintDisplay = sprintDisplay
     
     # border spacing for main frame
     Label(sprint_tab, width = 7).grid(row = 1, column = 1, sticky = W)
@@ -220,53 +224,8 @@ def createNewSprintWindow():
         start_date_entry.delete(0, END)
         end_date_entry.delete(0, END)
 
-        global sprintCardStorage
+        refresh_sprint_cards()
 
-        for card in sprintCardStorage:
-            card.destroy()
-        
-        # TODO: fix the updat live feature
-        sprintCardStorage = []
-        
-        # connect to database
-        connect_db = sqlite3.connect("sprints.db")
-
-        # create cusror
-        cursor = connect_db.cursor()
-
-        cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS sprints
-                    ([sprint_name], [start_date], [end_date], [status])
-                    ''')
-            
-        # select all data from table    
-        cursor.execute("SELECT * from sprints")
-        sprints = cursor.fetchall()
-
-        # [0]: sprint_name
-        # [1]: start_date
-        # [2]: end_date
-        # [3]: status
-
-        row = 1
-        col = 1
-
-        # print each card
-        for sprint in sprints:
-            name = (sprint[0])
-            status = (sprint[3])
-            start = (sprint[1])
-            end = (sprint[2])
-            
-            if col > 5:
-                col = 1
-                row += 1
-
-            sprintCard = create_sprint_display(SprintTab, name, status, start, end)
-            print(f"row: {row}, column = {col}")
-            sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
-            
-            col += 1
 
 
     # Toplevel object which will
@@ -871,14 +830,144 @@ def init_swap(root, title):
     saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
     def get_started():
-            # TODO: update live
-            ''' Changes sprint status when "Get Started" is clicked '''
-            connection = sqlite3.connect("sprints.db")
-            cursor = connection.cursor()
+        # TODO: update live
+        ''' Changes sprint status when "Get Started" is clicked '''
+        connection = sqlite3.connect("sprints.db")
+        cursor = connection.cursor()
 
-            query = ''' Update sprints set status = ? where sprint_name = ?'''
-            data = ("In progress", sprintName)
-            cursor.execute(query, data)
-            connection.commit()
+        query = ''' Update sprints set status = ? where sprint_name = ?'''
+        data = ("In progress", sprintName)
+        cursor.execute(query, data)
+        connection.commit()
+        refresh_sprint_cards()
+
+
+def init_tasks_for_sprint(root, title):
+    ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
+    # create top level window for task display
+    sprintTasksDisplay = Toplevel(root, height=400, width=800)
+    
+    sprintName = ""
+    
+    for char in title:
+        sprintName += str(char)
+    
+    rows = 4
+    cols = 6
+    
+    # set up grid
+    sprintTasksDisplay.grid_rowconfigure(rows, weight = 1)
+    sprintTasksDisplay.grid_columnconfigure(cols, weight = 1)
+    
+    # window title
+    # TODO: get title of sprint using database
+    title = Label(sprintTasksDisplay, text = "'Sprint Title' Board", anchor = CENTER)
+    title.grid(row = 1, column = 1, columnspan = 5, pady = (15,20))
+    
+    # spacing
+    Label(sprintTasksDisplay, width = 26).grid(row = 2, column = 1)
+    Label(sprintTasksDisplay, width = 26).grid(row = 2, column = 5)
+    
+    # labels for table
+    notStartedLabel = Label(sprintTasksDisplay, text = "Not started", font = ("Arial" ,8, "bold"),
+                            bg = "#EB8989", fg = "#DA1B1B", highlightbackground = "#DA1B1B", highlightthickness = 2,
+                            anchor = CENTER, width = 40)
+    notStartedLabel.grid(row = 2, column = 2, sticky = "s", padx = 1)
+    
+    inProgressLabel = Label(sprintTasksDisplay, text = "In progress", font = ("Arial" ,8, "bold"),
+                            bg = "#FFECB5", fg = "#FFAE00", highlightbackground = "#FFAE00", highlightthickness = 2,
+                            anchor = CENTER, width = 40)
+    inProgressLabel.grid(row = 2, column = 3, sticky = "s", padx = 1)
+    
+    completeLabel = Label(sprintTasksDisplay, text = "Complete", font = ("Arial" ,8, "bold"),
+                            bg = "#BBFC9D", fg = "#287F00", highlightbackground = "#287F00", highlightthickness = 2,
+                            anchor = CENTER, width = 40)
+    completeLabel.grid(row = 2, column = 4, sticky = "s", padx = 1)
+    
+    # boxes to place cards
+    notStartedFrame = Frame(sprintTasksDisplay, bg = "#FFFFFF", highlightbackground = "#DA1B1B", highlightthickness = 2,
+                            height = 300, width = 40)
+    notStartedFrame.grid(row = 3, column = 2, sticky = N+S+E+W, padx = 1)
+    
+    inProgressFrame = Frame(sprintTasksDisplay, bg = "#FFFFFF", highlightbackground = "#FFAE00", highlightthickness = 2,
+                            height = 300, width = 40)
+    inProgressFrame.grid(row = 3, column = 3, sticky = N+S+E+W, padx = 1)
+    
+    completeFrame = Frame(sprintTasksDisplay, bg = "#FFFFFF", highlightbackground = "#287F00", highlightthickness = 2,
+                            height = 300, width = 40)
+    completeFrame.grid(row = 3, column = 4, sticky = N+S+E+W, padx = 1)
+    
+    completeButton = Button(sprintTasksDisplay, text = " Complete Sprint ", anchor = CENTER, 
+                            command = lambda: complete_sprint())
+    completeButton.grid(row = 4, column = 1, columnspan = cols, padx = 1)
+    
+    scroll = Scrollbar(sprintTasksDisplay)
+    scroll.grid(row = 2, column = 6, rowspan = rows, sticky = "ne")
+    
+    def complete_sprint():
+        # TODO: update live
+        ''' Changes sprint status when "Complete" is clicked '''
+        connection = sqlite3.connect("sprints.db")
+        cursor = connection.cursor()
+
+        query = ''' Update sprints set status = ? where sprint_name = ?'''
+        data = ("Complete", sprintName)
+        cursor.execute(query, data)
+        connection.commit()
+        refresh_sprint_cards()
+
+
+def refresh_task_cards():
+    """ Refresh all the task cards once changes are made to the database"""
+    global cardStorage
+    for card in cardStorage:
+        card.destroy()
+    cardStorage = []
+    display(cardStorage)
+
+def refresh_sprint_cards():
+    """ Refresh all the sprint cards once changes are made to the database"""
+    global sprintCardStorage
+    global SprintDisplay
+    for card in sprintCardStorage:
+        card.destroy()
+
+    connect_db = sqlite3.connect("sprints.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+    
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sprints
+                ([sprint_name], [start_date], [end_date], [status])
+                ''')
+        
+    # select all data from table    
+    cursor.execute("SELECT * from sprints")
+    sprints = cursor.fetchall()
+    
+    # [0]: sprint_name
+    # [1]: start_date
+    # [2]: end_date
+    # [3]: status
+
+    row = 1
+    col = 1
+    # print each card
+    for sprint in sprints:
+        name = (sprint[0])
+        status = (sprint[3])
+        start = (sprint[1])
+        end = (sprint[2])
+        
+        if col > 5:
+            col = 1
+            row += 1
+    
+        sprintCard = create_sprint_display(SprintDisplay, name, status, start, end)
+        sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
+        
+        col += 1
+    
     
 main()
