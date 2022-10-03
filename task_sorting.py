@@ -3,12 +3,15 @@ from tkinter.ttk import Combobox
 from tkcalendar import DateEntry
 import sqlite3
 
-
-
-def init_tasks_for_sprint(root):
+def init_tasks_for_sprint(root, title):
     ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
     # create top level window for task display
     sprintTasksDisplay = Toplevel(root, height=400, width=800)
+    
+    sprintName = ""
+    
+    for char in title:
+        sprintName += str(char)
     
     rows = 4
     cols = 6
@@ -56,11 +59,24 @@ def init_tasks_for_sprint(root):
     completeFrame.grid(row = 3, column = 4, sticky = N+S+E+W, padx = 1)
     
     completeButton = Button(sprintTasksDisplay, text = " Complete Sprint ", anchor = CENTER, 
-                            command = lambda: complete_sprint(title))
+                            command = lambda: complete_sprint())
     completeButton.grid(row = 4, column = 1, columnspan = cols, padx = 1)
     
     scroll = Scrollbar(sprintTasksDisplay)
     scroll.grid(row = 2, column = 6, rowspan = rows, sticky = "ne")
+    
+    def complete_sprint():
+        # TODO: update live
+        ''' Changes sprint status when "Complete" is clicked '''
+        connection = sqlite3.connect("sprints.db")
+        cursor = connection.cursor()
+
+        query = ''' Update sprints set status = ? where sprint_name = ?'''
+        data = ("Complete", sprintName)
+        cursor.execute(query, data)
+        connection.commit()
+        print("Completed sprint!")
+
     
 def get_sprint_tasks():
     ''' Retrieves tasks belonging to a particular sprint '''
@@ -93,23 +109,6 @@ def display_tasks_of_sprint():
     # configure each category's grid according to list len
     # display tasks on each column by category
     pass
-
-def complete_sprint(title):
-    ''' Updates sprint status to "Complete" when button is pressed '''
-    # match sprint title in database
-    # connect to database
-    connect_db = sqlite3.connect("sprints.db")
-    
-    # create cusror
-    cursor = connect_db.cursor()
-        
-    # set status to "Complete"
-    query = '''SELECT status from sprints WHERE sprint_name=title'''
-    update = "Complete"
-    cursor.execute(query, (update,))
-    connect_db.commit()
-
-    # TODO: refresh sprint page?
     
 # root = Tk()
 # root.geometry("1200x600")
