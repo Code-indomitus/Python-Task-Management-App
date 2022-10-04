@@ -20,6 +20,7 @@ SprintDisplay = None # Child frame of sprint tab for the better
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
+memberStorage = [] # stores members of a sprint
 
 def main():
     
@@ -165,7 +166,45 @@ def main():
         col += 1
         
     # Team Board widgets
-    init_team_board(TeamTab)
+    memberDisplay = init_team_board(TeamTab)
+    
+    # printing each member of a sprint
+    # connect to database
+    connect_db = sqlite3.connect("members.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+    
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS members
+                ([member_name], [member_email], [member_analytics])
+                ''')
+        
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    
+    row = 1
+    col = 1
+    
+    global memberStorage
+    
+    # print each card
+    for member in members:
+        name = (member[0])
+        email = (member[1])
+        analytics = (member[2])
+        end = (member[2])
+    
+        memberCard = create_member_card(memberDisplay, name, email, analytics)
+        memberCard.grid(row = row, column = col)
+        memberStorage.append(memberCard)
+        
+        row += 1
     
     # run   
     mainWindow.mainloop()
