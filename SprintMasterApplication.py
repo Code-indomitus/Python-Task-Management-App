@@ -10,6 +10,7 @@ from tkinter.ttk import Combobox
 import sqlite3
 from tasks import *
 from task_sorting import *
+from us9_team_board import *
 
 MainWindow = None
 TaskTab = None
@@ -19,6 +20,7 @@ SprintDisplay = None # Child frame of sprint tab for the better
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
+
 def main():
     
     # connect to database during start
@@ -43,11 +45,12 @@ def main():
     
     # setup tabs
     notebook = ttk.Notebook(mainWindow)
-    notebook.grid(pady = 15)
+    notebook.grid(pady = 15, sticky = N+S+E+W)
 
     task_tab = Frame(notebook, width = 2000, height = 630)
     sprint_tab = Frame(notebook, width = 2000, height = 630)
-    team_tab = Frame(notebook, width = 2000, height = 630, bg = "purple")
+    team_tab = Frame(notebook, width = 2000, height = 630)
+    team_tab.grid(row = 0, column = 0, sticky = N+S+E+W)
 
     # task_tab.pack(fill = "both", expand = 1)
     task_tab.grid_rowconfigure(requiredRow, weight = 1)
@@ -55,6 +58,9 @@ def main():
 
     sprint_tab.grid_rowconfigure(1, weight = 1)
     sprint_tab.grid_columnconfigure(3, weight = 1)
+    
+    team_tab.grid_rowconfigure(2, weight = 1)
+    team_tab.grid_columnconfigure(1, weight = 1)
     
     # in sprint_tab: main frame with all sprints and their info displayed
     sprintDisplay = Frame(sprint_tab, width = 1200, height = 400)
@@ -157,6 +163,9 @@ def main():
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
+        
+    # Team Board widgets
+    init_team_board(TeamTab)
     
     # run   
     mainWindow.mainloop()
@@ -225,8 +234,6 @@ def createNewSprintWindow():
         end_date_entry.delete(0, END)
 
         refresh_sprint_cards()
-
-
 
     # Toplevel object which will
     # be treated as a new window
