@@ -17,6 +17,7 @@ TaskTab = None
 SprintTab = None
 TeamTab = None
 SprintDisplay = None # Child frame of sprint tab for the better
+memberDisplay = None # parent frame of member cards
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
@@ -193,18 +194,25 @@ def main():
     
     global memberStorage
     
-    # print each card
-    for member in members:
-        name = (member[0])
-        email = (member[1])
-        analytics = (member[2])
-        end = (member[2])
-    
-        memberCard = create_member_card(memberDisplay, name, email, analytics)
-        memberCard.grid(row = row, column = col)
-        memberStorage.append(memberCard)
+    # check if there are members
+    if members == []:
+            empty = Label(memberDisplay, text = "No members to show.", font = ("Roboto", 10),
+                          bg = "white", fg = "black", height = 2,
+                          highlightbackground = "black", highlightthickness = 1)
+            empty.grid(row = 1, column = 1, columnspan = 4, sticky = E+W)
+    else:
+        # print each card
+        for member in members:
+            name = (member[0])
+            email = (member[1])
+            analytics = (member[2])
+            end = (member[2])
         
-        row += 1
+            memberCard = create_member_card(memberDisplay, name, email, analytics)
+            memberCard.grid(row = row, column = col)
+            memberStorage.append(memberCard)
+            
+            row += 1
     
     # run   
     mainWindow.mainloop()
@@ -876,7 +884,6 @@ def init_swap(root, title):
     saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
     def get_started():
-        # TODO: update live
         ''' Changes sprint status when "Get Started" is clicked '''
         connection = sqlite3.connect("sprints.db")
         cursor = connection.cursor()
@@ -1014,6 +1021,55 @@ def refresh_sprint_cards():
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
+        
+def refresh_member_cards():
+    """ Refresh all the sprint cards once changes are made to the database"""
+    global memberStorage
+    global memberDisplay
     
+    for member in memberStorage:
+        member.destroy()
+
+    # connect to database
+    connect_db = sqlite3.connect("members.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+    
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS members
+                ([member_name], [member_email], [member_analytics])
+                ''')
+        
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    
+    row = 1
+    col = 1
+    
+    # check if there are members
+    if members == []:
+            empty = Label(memberDisplay, text = "No members to show.", font = ("Roboto", 10),
+                          bg = "white", fg = "black", height = 2,
+                          highlightbackground = "black", highlightthickness = 1)
+            empty.grid(row = 1, column = 1, columnspan = 4, sticky = E+W)
+    else:
+        # print each card
+        for member in members:
+            name = (member[0])
+            email = (member[1])
+            analytics = (member[2])
+            end = (member[2])
+        
+            memberCard = create_member_card(memberDisplay, name, email, analytics)
+            memberCard.grid(row = row, column = col)
+            memberStorage.append(memberCard)
+            
+            row += 1
     
 main()
