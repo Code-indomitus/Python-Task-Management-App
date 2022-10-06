@@ -11,6 +11,8 @@ import sqlite3
 from tasks import *
 from task_sorting import *
 from us9_team_board import *
+import re
+import time
 
 MainWindow = None
 TaskTab = None
@@ -323,7 +325,35 @@ def createNewSprintWindow():
 
 def add_member_window(root):
 
+    # Toplevel object which will
+    # be treated as a new window
+    addMemberWindow = Toplevel(root)
+ 
+    # sets the title of the
+    # Toplevel widget
+    addMemberWindow.title("Add Member")
+ 
+    # sets the geometry of toplevel
+    addMemberWindow.geometry("400x200")
+    
+    def check_valid_email(email):
+        valid_email = False
+
+        email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+
+        if re.fullmatch(email_regex, email):
+            valid_email = True
+
+        return valid_email
+
+
     def add_member():
+
+        if not check_valid_email(member_email_entry.get()):
+
+            messagebox.showerror("Email Error", "Invalid email input entered!")
+            return 
+
         # Create/Connect to a database
         connect_db = sqlite3.connect('members.db')
         # Create cusror
@@ -351,18 +381,6 @@ def add_member_window(root):
         member_name_entry.delete(0, END)
         member_email_entry.delete(0, END)
         refresh_member_cards()
-
-    # Toplevel object which will
-    # be treated as a new window
-    addMemberWindow = Toplevel(root)
- 
-    # sets the title of the
-    # Toplevel widget
-    addMemberWindow.title("Add Member")
- 
-    # sets the geometry of toplevel
-    addMemberWindow.geometry("400x200")
-
 
     frame = Frame(addMemberWindow, width = 400, height = 200)
     frame.pack()
