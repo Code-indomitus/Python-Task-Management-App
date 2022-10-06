@@ -49,9 +49,9 @@ def main():
     notebook = ttk.Notebook(mainWindow)
     notebook.grid(pady = 15, sticky = N+S+E+W)
 
-    task_tab = Frame(notebook, width = 2000, height = 630)
-    sprint_tab = Frame(notebook, width = 2000, height = 630)
-    team_tab = Frame(notebook, width = 2000, height = 630)
+    task_tab = Frame(notebook, width = 2000, height = 630, bg = "#FEE1E8")
+    sprint_tab = Frame(notebook, width = 2000, height = 630, bg = "#DDF2FD")
+    team_tab = Frame(notebook, width = 2000, height = 630, bg = "#ECE3FC")
     team_tab.grid(row = 0, column = 0, sticky = N+S+E+W)
 
     # task_tab.pack(fill = "both", expand = 1)
@@ -65,7 +65,7 @@ def main():
     team_tab.grid_columnconfigure(1, weight = 1)
     
     # in sprint_tab: main frame with all sprints and their info displayed
-    sprintDisplay = Frame(sprint_tab, width = 1200, height = 400)
+    sprintDisplay = Frame(sprint_tab, width = 1200, height = 400, bg = "#DDF2FD")
     sprintDisplay.grid_rowconfigure(5, weight = 1)
     sprintDisplay.grid_columnconfigure(5, weight = 1)
     sprintDisplay.grid_propagate(False)
@@ -98,8 +98,8 @@ def main():
     
     filterButton = Button(task_tab, text = "FILTER", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
-    spaceStart = Frame(task_tab, width=50, height=50)
-    spaceEnd = Frame(task_tab, width=50, height=50)
+    spaceStart = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
+    spaceEnd = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
     spaceStart.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
     spaceEnd.grid(row = 3, column = 6, padx = 3, pady = 3, sticky = "ne")
 
