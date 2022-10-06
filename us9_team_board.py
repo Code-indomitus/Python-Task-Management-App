@@ -11,7 +11,7 @@ def init_team_board(root):
     ''' Initialise team board. '''
     
     # frame storing buttons at top
-    buttonFrame = Frame(root, height = 20, width = 1100)
+    buttonFrame = Frame(root, height = 20, width = 1100, bg = "#ECE3FC")
     buttonFrame.grid_rowconfigure(1, weight = 1)
     buttonFrame.grid_columnconfigure(3, weight = 1)
     buttonFrame.grid_propagate(False)
@@ -32,7 +32,7 @@ def init_team_board(root):
     dashboardButton.grid(row = 1, column = 3, sticky = E)
     
     # table listing members of sprint
-    memberTableFrame = Frame(root, height = 450, width = 1000)
+    memberTableFrame = Frame(root, height = 450, width = 1000, bg = "#ECE3FC")
     memberTableFrame.grid_rowconfigure(10, weight = 1)
     memberTableFrame.grid_columnconfigure(4, weight = 1)
     memberTableFrame.grid_propagate(False)
