@@ -399,6 +399,7 @@ def add_member_window(root):
     addButton = Button(frame, text = "Add Member", command = add_member)
     addButton.place(x = 200, y = 150, anchor = CENTER)
 
+
 def init_team_board(root):
     ''' Initialise team board. '''
     
@@ -507,6 +508,7 @@ def create_member_card(root, name, email, analytics):
         query = ''' DELETE from members where member_name = ?'''
         cursor.execute(query, (memberName,))
         connection.commit()
+        refresh_member_cards()
     
     return entryFrame
 
