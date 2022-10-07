@@ -253,7 +253,7 @@ def get_sprints_details():
 
 def createNewSprintWindow():
 
-    def createSprint():
+    def createSprint(window):
         # Create/Connect to a database
         connect_db = sqlite3.connect('sprints.db')
         # Create cusror
@@ -284,6 +284,7 @@ def createNewSprintWindow():
         end_date_entry.delete(0, END)
 
         refresh_sprint_cards()
+        window.destroy()
 
     # Toplevel object which will
     # be treated as a new window
@@ -316,7 +317,7 @@ def createNewSprintWindow():
     start_date_entry.place(x = 110, y = 90)
     end_date_entry.place(x = 110, y = 140)
 
-    createButton = Button(frame, text = "Create Sprint", command = createSprint)
+    createButton = Button(frame, text = "Create Sprint", command = lambda: createSprint(newSprintWindow))
     createButton.place(x = 110, y = 290)
 
     discardButton = Button(frame, text = "Discard Sprint", command = newSprintWindow.destroy)
@@ -516,7 +517,7 @@ def create_member_card(root, name, email, analytics):
 
 def createNewTaskWindow():
 
-    def createTask():
+    def createTask(window):
 
         # Create/Connect to a database
         connect_db = sqlite3.connect('tasks.db')
@@ -568,6 +569,8 @@ def createNewTaskWindow():
         status.set('')
         assigned_to.set('')
         tag.set('')
+
+        window.destroy()
 
     # Toplevel object which will
     # be treated as a new window
@@ -641,7 +644,7 @@ def createNewTaskWindow():
     tag.current(0)
     tag.place(x = 140, y = 230)
 
-    createButton = Button(frame, text = "Create", command = createTask)
+    createButton = Button(frame, text = "Create", command = lambda: createTask(newTaskWindow))
     createButton.place(x = 125, y = 350)
 
     discardButton = Button(frame, text = "Close", command = newTaskWindow.destroy)
