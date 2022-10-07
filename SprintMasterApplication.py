@@ -347,7 +347,7 @@ def add_member_window(root):
         return valid_email
 
 
-    def add_member():
+    def add_member(window):
 
         if not check_valid_email(member_email_entry.get()):
 
@@ -381,6 +381,7 @@ def add_member_window(root):
         member_name_entry.delete(0, END)
         member_email_entry.delete(0, END)
         refresh_member_cards()
+        window.destroy()
 
     frame = Frame(addMemberWindow, width = 400, height = 200)
     frame.pack()
@@ -396,7 +397,7 @@ def add_member_window(root):
     member_name_entry.place(x = 110, y = 50)
     member_email_entry.place(x = 110, y = 90)
 
-    addButton = Button(frame, text = "Add Member", command = add_member)
+    addButton = Button(frame, text = "Add Member", command = lambda: add_member(addMemberWindow))
     addButton.place(x = 200, y = 150, anchor = CENTER)
 
 
