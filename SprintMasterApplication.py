@@ -10,15 +10,21 @@ from tkinter.ttk import Combobox
 import sqlite3
 from tasks import *
 from task_sorting import *
+from us9_team_board import *
+import re
+import time
 
 MainWindow = None
 TaskTab = None
 SprintTab = None
 TeamTab = None
 SprintDisplay = None # Child frame of sprint tab for the better
+memberDisplay = None # parent frame of member cards
 cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
+memberStorage = [] # stores members of a sprint
+
 def main():
     
     # connect to database during start
@@ -43,11 +49,12 @@ def main():
     
     # setup tabs
     notebook = ttk.Notebook(mainWindow)
-    notebook.grid(pady = 15)
+    notebook.grid(pady = 15, sticky = N+S+E+W)
 
-    task_tab = Frame(notebook, width = 2000, height = 630)
-    sprint_tab = Frame(notebook, width = 2000, height = 630)
-    team_tab = Frame(notebook, width = 2000, height = 630, bg = "purple")
+    task_tab = Frame(notebook, width = 2000, height = 630, bg = "#FEE1E8")
+    sprint_tab = Frame(notebook, width = 2000, height = 630, bg = "#DDF2FD")
+    team_tab = Frame(notebook, width = 2000, height = 630, bg = "#ECE3FC")
+    team_tab.grid(row = 0, column = 0, sticky = N+S+E+W)
 
     # task_tab.pack(fill = "both", expand = 1)
     task_tab.grid_rowconfigure(requiredRow, weight = 1)
@@ -56,8 +63,11 @@ def main():
     sprint_tab.grid_rowconfigure(1, weight = 1)
     sprint_tab.grid_columnconfigure(3, weight = 1)
     
+    team_tab.grid_rowconfigure(2, weight = 1)
+    team_tab.grid_columnconfigure(1, weight = 1)
+    
     # in sprint_tab: main frame with all sprints and their info displayed
-    sprintDisplay = Frame(sprint_tab, width = 1200, height = 400)
+    sprintDisplay = Frame(sprint_tab, width = 1200, height = 400, bg = "#DDF2FD")
     sprintDisplay.grid_rowconfigure(5, weight = 1)
     sprintDisplay.grid_columnconfigure(5, weight = 1)
     sprintDisplay.grid_propagate(False)
@@ -90,8 +100,8 @@ def main():
     
     filterButton = Button(task_tab, text = "FILTER", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
-    spaceStart = Frame(task_tab, width=50, height=50)
-    spaceEnd = Frame(task_tab, width=50, height=50)
+    spaceStart = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
+    spaceEnd = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
     spaceStart.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
     spaceEnd.grid(row = 3, column = 6, padx = 3, pady = 3, sticky = "ne")
 
@@ -157,6 +167,55 @@ def main():
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
+        
+    # Team Board widgets
+    global memberDisplay
+    memberDisplay = init_team_board(TeamTab)
+    
+    # printing each member of a sprint
+    # connect to database
+    connect_db = sqlite3.connect("members.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+    
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS members
+                ([member_name], [member_email], [member_analytics])
+                ''')
+        
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    
+    row = 1
+    col = 1
+    
+    global memberStorage
+    
+    # check if there are members
+    if members == []:
+            empty = Label(memberDisplay, text = "No members to show.", font = ("Roboto", 10),
+                          bg = "white", fg = "black", height = 2,
+                          highlightbackground = "black", highlightthickness = 1)
+            empty.grid(row = 1, column = 1, columnspan = 4, sticky = E+W)
+    else:
+        # print each card
+        for member in members:
+            name = (member[0])
+            email = (member[1])
+            analytics = (member[2])
+            end = (member[2])
+        
+            memberCard = create_member_card(memberDisplay, name, email, analytics)
+            memberCard.grid(row = row, column = col)
+            memberStorage.append(memberCard)
+            
+            row += 1
     
     # run   
     mainWindow.mainloop()
@@ -226,8 +285,6 @@ def createNewSprintWindow():
 
         refresh_sprint_cards()
 
-
-
     # Toplevel object which will
     # be treated as a new window
     newSprintWindow = Toplevel(MainWindow)
@@ -264,6 +321,197 @@ def createNewSprintWindow():
 
     discardButton = Button(frame, text = "Discard Sprint", command = newSprintWindow.destroy)
     discardButton.place(x = 225, y = 290)
+
+
+def add_member_window(root):
+
+    # Toplevel object which will
+    # be treated as a new window
+    addMemberWindow = Toplevel(root)
+ 
+    # sets the title of the
+    # Toplevel widget
+    addMemberWindow.title("Add Member")
+ 
+    # sets the geometry of toplevel
+    addMemberWindow.geometry("400x200")
+    
+    def check_valid_email(email):
+        valid_email = False
+
+        email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+
+        if re.fullmatch(email_regex, email):
+            valid_email = True
+
+        return valid_email
+
+
+    def add_member():
+
+        if not check_valid_email(member_email_entry.get()):
+
+            messagebox.showerror("Email Error", "Invalid email input entered!")
+            return 
+
+        # Create/Connect to a database
+        connect_db = sqlite3.connect('members.db')
+        # Create cusror
+        cursor = connect_db.cursor()
+
+        cursor.execute('''
+                CREATE TABLE IF NOT EXISTS members
+                ([member_name], [member_email], [member_analytics])
+                ''')
+
+        connect_db.execute("INSERT INTO members VALUES (:member_name, :member_email, :member_analytics)", 
+                        {
+                            'member_name': member_name_entry.get(),
+                            'member_email': member_email_entry.get(),
+                            'member_analytics': 0
+                        }
+                            )
+        
+        # Commit changes
+        connect_db.commit()
+        # Close Connnection
+        connect_db.close()
+
+        # Clear input boxes
+        member_name_entry.delete(0, END)
+        member_email_entry.delete(0, END)
+        refresh_member_cards()
+
+    frame = Frame(addMemberWindow, width = 400, height = 200)
+    frame.pack()
+
+    member_name = Label(frame, text = "Member Name:")
+    member_name.place(x = 20, y = 50)
+
+    member_email = Label(frame, text = "Member Email:")
+    member_email.place(x = 20, y = 90)
+
+    member_name_entry = Entry(frame, width = 40)
+    member_email_entry = Entry(frame, width = 40)
+    member_name_entry.place(x = 110, y = 50)
+    member_email_entry.place(x = 110, y = 90)
+
+    addButton = Button(frame, text = "Add Member", command = add_member)
+    addButton.place(x = 200, y = 150, anchor = CENTER)
+
+
+def init_team_board(root):
+    ''' Initialise team board. '''
+    
+    # frame storing buttons at top
+    buttonFrame = Frame(root, height = 20, width = 1100, bg = "#ECE3FC")
+    buttonFrame.grid_rowconfigure(1, weight = 1)
+    buttonFrame.grid_columnconfigure(3, weight = 1)
+    buttonFrame.grid_propagate(False)
+    buttonFrame.grid(row = 1, column = 1, pady = (30, 40))
+    
+    # "+"
+    plusButton = Button(buttonFrame, text = "+", font = ("Arial", 12), width = 1, height = 5,
+                        command = lambda: add_member_window(root))
+    plusButton.grid(row = 1, column = 1, sticky = W)
+    
+    # "Add Team Member"
+    addMemberButton = Button(buttonFrame, text = "Add Team Member", width = 16, height = 4,
+                             command = lambda: add_member_window(root))
+    addMemberButton.grid(row = 1, column = 2, sticky = W)
+    
+    # "Dashboard"
+    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4)
+    dashboardButton.grid(row = 1, column = 3, sticky = E)
+    
+    # table listing members of sprint
+    memberTableFrame = Frame(root, height = 450, width = 1000, bg = "#ECE3FC")
+    memberTableFrame.grid_rowconfigure(10, weight = 1)
+    memberTableFrame.grid_columnconfigure(4, weight = 1)
+    memberTableFrame.grid_propagate(False)
+    memberTableFrame.grid(row = 2, column = 1, sticky = "")
+    
+    # headers for table
+    nameHeader = Label(memberTableFrame, text = "NAME", font = ("Roboto", 9, "bold")
+                       , width = 52, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    nameHeader.grid(row = 0, column = 1, sticky = W+E)
+    
+    emailHeader = Label(memberTableFrame, text = "EMAIL", font = ("Roboto", 9, "bold")
+                       , width = 60, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    emailHeader.grid(row = 0, column = 2, sticky = W+E)
+    
+    analyticsHeader = Label(memberTableFrame, text = "ANALYTICS", font = ("Roboto", 9, "bold")
+                       , width = 20, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    analyticsHeader.grid(row = 0, column = 3, sticky = W+E)
+    
+    deleteHeader = Label(memberTableFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 5, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    deleteHeader.grid(row = 0, column = 4, sticky = W+E)
+    
+    return memberTableFrame
+
+
+def create_member_card(root, name, email, analytics):
+    ''' Creates an entry of a member in the table '''
+    # turn name into string
+    memberName = ""
+    
+    for char in name:
+        memberName += str(char)
+        
+    # frame storing all fields of a member
+    entryFrame = Frame(root, height = 2, width = 1000)
+    entryFrame.grid_rowconfigure(1, weight = 1)
+    entryFrame.grid_columnconfigure(4, weight = 1)
+    entryFrame.grid(columnspan = 4)
+    
+    # member name
+    nameFrame = Label(entryFrame, text = name, font = ("Roboto", 9)
+                       , width = 52, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    nameFrame.grid(row = 1, column = 1, sticky = W+E)
+    
+    # member email
+    emailFrame = Label(entryFrame, text = email, font = ("Roboto", 9)
+                       , width = 60, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    emailFrame.grid(row = 1, column = 2, sticky = W+E)
+    
+    # member analytics
+    analyticsFrame = Label(entryFrame, text = analytics, font = ("Roboto", 9)
+                       , width = 20, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    analyticsFrame.grid(row = 1, column = 3, sticky = W+E)
+    
+    analyticsButton = Button(analyticsFrame, width = 10, height = 1, text = "Analytics",
+                            font = ("Roboto", 8, "bold"), bg = "#0D5588", fg = "white")
+    analyticsButton.place(x=32, y=3)
+    
+    # delete
+    deleteFrame = Label(entryFrame, width = 7, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    deleteFrame.grid(row = 1, column = 4, sticky = W+E)
+    
+    deleteButton = Button(deleteFrame, width = 3, height = 1, text = "X", font = ("Arial", 8, "bold"),
+                          bg = "red", fg = "white", command = lambda: remove_member())
+    deleteButton.place(x=7, y=3)
+    
+    def remove_member():
+        ''' Nested method that removes a member '''
+        connection = sqlite3.connect("members.db")
+        cursor = connection.cursor()
+
+        query = ''' DELETE from members where member_name = ?'''
+        cursor.execute(query, (memberName,))
+        connection.commit()
+        refresh_member_cards()
+    
+    return entryFrame
+
 
 def createNewTaskWindow():
 
@@ -830,7 +1078,6 @@ def init_swap(root, title):
     saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
     def get_started():
-        # TODO: update live
         ''' Changes sprint status when "Get Started" is clicked '''
         connection = sqlite3.connect("sprints.db")
         cursor = connection.cursor()
@@ -905,7 +1152,6 @@ def init_tasks_for_sprint(root, title):
     scroll.grid(row = 2, column = 6, rowspan = rows, sticky = "ne")
     
     def complete_sprint():
-        # TODO: update live
         ''' Changes sprint status when "Complete" is clicked '''
         connection = sqlite3.connect("sprints.db")
         cursor = connection.cursor()
@@ -968,6 +1214,55 @@ def refresh_sprint_cards():
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
+        
+def refresh_member_cards():
+    """ Refresh all the sprint cards once changes are made to the database"""
+    global memberStorage
+    global memberDisplay
     
+    for member in memberStorage:
+        member.destroy()
+
+    # connect to database
+    connect_db = sqlite3.connect("members.db")
+    
+    # create cusror
+    cursor = connect_db.cursor()
+    
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS members
+                ([member_name], [member_email], [member_analytics])
+                ''')
+        
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    
+    row = 1
+    col = 1
+    
+    # check if there are members
+    if members == []:
+            empty = Label(memberDisplay, text = "No members to show.", font = ("Roboto", 10),
+                          bg = "white", fg = "black", height = 2,
+                          highlightbackground = "black", highlightthickness = 1)
+            empty.grid(row = 1, column = 1, columnspan = 4, sticky = E+W)
+    else:
+        # print each card
+        for member in members:
+            name = (member[0])
+            email = (member[1])
+            analytics = (member[2])
+            end = (member[2])
+        
+            memberCard = create_member_card(memberDisplay, name, email, analytics)
+            memberCard.grid(row = row, column = col)
+            memberStorage.append(memberCard)
+            
+            row += 1
     
 main()
