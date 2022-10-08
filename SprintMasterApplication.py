@@ -423,7 +423,8 @@ def init_team_board(root):
     addMemberButton.grid(row = 1, column = 2, sticky = W)
     
     # "Dashboard"
-    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4)
+    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4,
+                             command = lambda: dashboard(root))
     dashboardButton.grid(row = 1, column = 3, sticky = E)
     
     # table listing members of sprint
@@ -455,6 +456,55 @@ def init_team_board(root):
     deleteHeader.grid(row = 0, column = 4, sticky = W+E)
     
     return memberTableFrame
+
+def dashboard(root):
+    dashboardWindow = Toplevel(root)
+ 
+    # sets the title of the
+    # Toplevel widget
+    dashboardWindow.title("Team Dashboard")
+ 
+    # sets the geometry of toplevel
+    dashboardWindow.geometry("800x630")
+
+    dashboardWindow.grid_rowconfigure(3, weight = 1)
+    dashboardWindow.grid_columnconfigure(1, weight = 1)
+
+    dashboardLabel = Label(dashboardWindow, text = "DASHBOARD", font = ("Roboto", 14, "bold"), fg = "blue", pady = 30, padx = 30)
+    dashboardLabel.grid(row = 1, column = 1, sticky = W+E)
+
+    dateFrame = Frame(dashboardWindow, height = 100, width = 200, bg = "blue")
+    dateFrame.grid_rowconfigure(3, weight = 1)
+    dateFrame.grid_columnconfigure(2, weight = 1)
+    dateFrame.grid(row = 2, column = 1, sticky = "")
+
+    startDate = Label(dateFrame, text = "Start Date", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "light grey",
+                       highlightbackground = "black", highlightthickness = 1)
+    endDate = Label(dateFrame, text = "End Date", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "light grey",
+                       highlightbackground = "black", highlightthickness = 1)
+
+    startDate.grid(row = 0, column = 0, sticky = W+E)
+    endDate.grid(row = 0, column = 1, sticky = W+E)
+
+    startDateEntryLabel = Label(dateFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    endDateEntryLabel = Label(dateFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+
+    startDateEntryLabel.grid(row = 1, column = 1, sticky = W+E)
+    endDateEntryLabel.grid(row = 1, column = 0, sticky = W+E)
+
+    start_date_entry = DateEntry(startDateEntryLabel,selectmode='day')  # Date entry allows user to get date input using a calendar. The date input is in datetime.date format/object
+    end_date_entry = DateEntry(endDateEntryLabel,selectmode='day')
+    start_date_entry.grid(sticky = W+E)
+    end_date_entry.grid(sticky = W+E)
+
+
+
 
 
 def create_member_card(root, name, email, analytics):
