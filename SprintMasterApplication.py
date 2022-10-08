@@ -51,7 +51,7 @@ def main():
     notebook = ttk.Notebook(mainWindow)
     notebook.grid(pady = 15, sticky = N+S+E+W)
 
-    task_tab = Frame(notebook, width = 2000, height = 630, bg = "#FEE1E8")
+    task_tab = Frame(notebook, width = 2000, height = 630, bg = "#f5dd9d")
     sprint_tab = Frame(notebook, width = 2000, height = 630, bg = "#DDF2FD")
     team_tab = Frame(notebook, width = 2000, height = 630, bg = "#ECE3FC")
     team_tab.grid(row = 0, column = 0, sticky = N+S+E+W)
@@ -89,8 +89,8 @@ def main():
     TeamTab = team_tab
 
     # Task Board widgets
-    createTaskButton = Button(task_tab, text = "Create New Task", command = createNewTaskWindow)
-    filterLabel = Label(task_tab ,text = "Filter: ") 
+    createTaskButton = Button(task_tab, text = "Create New Task", command = createNewTaskWindow, bg = "#ffbc11")
+    filterLabel = Label(task_tab ,text = "Filter: ", bg = "#f5dd9d") 
     current_tag = StringVar()
     tags = Combobox(task_tab, textvariable = current_tag)
 
@@ -100,8 +100,8 @@ def main():
     
     filterButton = Button(task_tab, text = "FILTER", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
-    spaceStart = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
-    spaceEnd = Frame(task_tab, width=50, height=50, bg = "#FEE1E8")
+    spaceStart = Frame(task_tab, width=50, height=50, bg = "#f5dd9d")
+    spaceEnd = Frame(task_tab, width=50, height=50, bg = "#f5dd9d")
     spaceStart.grid(row = 3, column = 1, padx = 3, pady = 3, sticky = "nw")
     spaceEnd.grid(row = 3, column = 6, padx = 3, pady = 3, sticky = "ne")
 
@@ -423,7 +423,8 @@ def init_team_board(root):
     addMemberButton.grid(row = 1, column = 2, sticky = W)
     
     # "Dashboard"
-    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4)
+    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4,
+                             command = lambda: dashboard(root))
     dashboardButton.grid(row = 1, column = 3, sticky = E)
     
     # table listing members of sprint
@@ -455,6 +456,66 @@ def init_team_board(root):
     deleteHeader.grid(row = 0, column = 4, sticky = W+E)
     
     return memberTableFrame
+
+def dashboard(root):
+    dashboardWindow = Toplevel(root)
+ 
+    # sets the title of the
+    # Toplevel widget
+    dashboardWindow.title("Team Dashboard")
+ 
+    # sets the geometry of toplevel
+    dashboardWindow.geometry("800x630")
+
+    dashboardWindow.grid_rowconfigure(3, weight = 1)
+    dashboardWindow.grid_columnconfigure(1, weight = 1)
+
+    dashboardLabel = Label(dashboardWindow, text = "DASHBOARD", font = ("Roboto", 14, "bold"), fg = "blue", pady = 30, padx = 30)
+    dashboardLabel.grid(row = 1, column = 1, sticky = W+E)
+
+    dateFrame = Frame(dashboardWindow, height = 100, width = 200, bg = "blue")
+    dateFrame.grid_rowconfigure(3, weight = 1)
+    dateFrame.grid_columnconfigure(2, weight = 1)
+    dateFrame.grid(row = 2, column = 1, sticky = "")
+
+    startDate = Label(dateFrame, text = "Start Date", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "light grey",
+                       highlightbackground = "black", highlightthickness = 1)
+    endDate = Label(dateFrame, text = "End Date", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "light grey",
+                       highlightbackground = "black", highlightthickness = 1)
+
+    startDate.grid(row = 0, column = 0, sticky = W+E)
+    endDate.grid(row = 0, column = 1, sticky = W+E)
+
+    startDateEntryLabel = Label(dateFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    endDateEntryLabel = Label(dateFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 10, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+
+    startDateEntryLabel.grid(row = 1, column = 1, sticky = W+E)
+    endDateEntryLabel.grid(row = 1, column = 0, sticky = W+E)
+
+    start_date_entry = DateEntry(startDateEntryLabel, selectmode='day')  # Date entry allows user to get date input using a calendar. The date input is in datetime.date format/object
+    end_date_entry = DateEntry(endDateEntryLabel, selectmode='day')
+    start_date_entry.grid(sticky = "we")
+    end_date_entry.grid(sticky = "we")
+
+    getResultLabel = Label(dateFrame, text = "", font = ("Roboto", 9, "bold")
+                       , width = 20, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    getResultLabel.grid(row = 2, column = 0, columnspan = 2, sticky = W+E)
+
+    getResultButton = Button(getResultLabel, text = "Get Results", width = 30, height = 1)
+    getResultButton.grid(sticky = W+E)
+
+    backButton = Button(dashboardWindow, text = "Back", command = lambda: dashboardWindow.destroy())
+    backButton.grid(row = 1, column = 1, padx = 40, pady = 40, sticky = E)
+
+
+
 
 
 def create_member_card(root, name, email, analytics):
