@@ -1565,9 +1565,15 @@ def refresh_member_cards():
             row += 1
             
 def check_analytics(root):
-    x = [0, 1, 2, 3, 4, 5, 6, 7]
-    y = [2, 0, 3, 3, 1, 7, 8, 4]
+    # dictionary for data
+    data = {'Day 1': 1.2, 'Day 2': 4, 'Day 3': 5, 'Day 4': 4,
+            'Day 5': 0, 'Day 6': 2.5, 'Day 7': 9}
     
+    # x and y axes
+    x = list(data.keys())
+    y = list(data.values())
+    
+    # tkinter window that will house plot
     plotWindow = Toplevel(root)
     
     # figure that contains plot
@@ -1575,12 +1581,18 @@ def check_analytics(root):
     
     plot1 = figure.add_subplot(111)
     
-    plot1.plot(x, y)
+    plot1.bar(x, y, color = "maroon", width = 0.4)
+    
+    plot1.set_xlabel("Day")
+    plot1.set_ylabel("Hours logged")
+    plot1.set_title("...'s Analytics")
     
     canvas = FigureCanvasTkAgg(figure, master = plotWindow)  
     
     canvas.draw()
     
-    canvas.get_tk_widget().pack()
+    canvas.get_tk_widget().pack(side = BOTTOM, fill = 'both', expand = True)
+    
+    #Label(plotWindow, text="...'s Analytics", bg = "white").pack(side=TOP, fill = 'both', expand = True)
     
 main()
