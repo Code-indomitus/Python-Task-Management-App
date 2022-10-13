@@ -13,6 +13,9 @@ from task_sorting import *
 from us9_team_board import *
 import re
 import time
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 MainWindow = None
 TaskTab = None
@@ -551,7 +554,8 @@ def create_member_card(root, name, email, analytics):
     analyticsFrame.grid(row = 1, column = 3, sticky = W+E)
     
     analyticsButton = Button(analyticsFrame, width = 10, height = 1, text = "Analytics",
-                            font = ("Roboto", 8, "bold"), bg = "#0D5588", fg = "white")
+                            font = ("Roboto", 8, "bold"), bg = "#0D5588", fg = "white",
+                            command = lambda: check_analytics(root))
     analyticsButton.place(x=32, y=3)
     
     # delete
@@ -1559,5 +1563,24 @@ def refresh_member_cards():
             memberStorage.append(memberCard)
             
             row += 1
+            
+def check_analytics(root):
+    x = [0, 1, 2, 3, 4, 5, 6, 7]
+    y = [2, 0, 3, 3, 1, 7, 8, 4]
+    
+    plotWindow = Toplevel(root)
+    
+    # figure that contains plot
+    figure = Figure(figsize = (5, 5), dpi = 100)
+    
+    plot1 = figure.add_subplot(111)
+    
+    plot1.plot(x, y)
+    
+    canvas = FigureCanvasTkAgg(figure, master = plotWindow)  
+    
+    canvas.draw()
+    
+    canvas.get_tk_widget().pack()
     
 main()
