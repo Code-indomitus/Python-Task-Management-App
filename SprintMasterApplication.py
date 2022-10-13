@@ -36,7 +36,7 @@ def main():
     # create table "tasks" in same dir if it does not exist locally
     cursor.execute('''
                     CREATE TABLE IF NOT EXISTS tasks
-                    ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id])
+                    ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id], [pos])
                     ''')
           
     # attributes
@@ -594,7 +594,7 @@ def createNewTaskWindow():
         currentTaskNumber = len(cardStorage)+1 # create the card
         
         # input data
-        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :story_points, :priority, :status, :assigned_to, :tag, :id)", 
+        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :story_points, :priority, :status, :assigned_to, :tag, :id, :pos)", 
                         {
                             'task_name': entry1.get(),
                             'task_description': entry2.get(),
@@ -603,7 +603,8 @@ def createNewTaskWindow():
                             'status': status.get(),
                             'assigned_to': assigned_to.get(),
                             'tag': tag.get(),
-                            'id': currentTaskNumber
+                            'id': currentTaskNumber,
+                            'pos': 1
                         }
                        
                             )
@@ -1153,6 +1154,233 @@ def init_swap(root, title):
         connection.commit()
         refresh_sprint_cards()
 
+    def changePos(id, pos, mainFrame):
+        if pos == 1:
+            pos = 2
+        elif pos == 2:
+            pos = 1
+
+        #connect to database
+        sqliteConnection = sqlite3.connect('tasks.db')
+        #connect to cursor
+        cursor = sqliteConnection.cursor()
+
+        #update the selected row
+        sql_update_query = "Update tasks set pos = ? where id = ?"
+        data = (pos, int(id))
+        cursor.execute(sql_update_query, data)
+        sqliteConnection.commit()
+        cursor.close()
+        sqliteConnection.close()
+
+        mainFrame.destroy()
+        global cardStorage
+        for card in cardStorage:
+            card.destroy()
+        cardStorage = []
+        display_swap(cardStorage)
+        display(cardStorage)
+
+##############################################################################################################################
+    def create_task_card_swap(cardStorage,taskNumber, 
+                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos):
+        if pos == 1:
+            # main frame for card
+            mainFrame = Frame(productBacklogFrame, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+            # card split into 9Rx8C; cells evenly sized
+            for i in range(1, 8): #R1-R8
+                mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
+            for i in range(2, 9-1): #C2-C8
+                mainFrame.grid_columnconfigure(i, weight = 1, uniform = "cardcolumns")
+            mainFrame.grid_propagate(0) # stop auto resize
+            
+            # print fields and buttons for card
+            cardNum = Label(mainFrame, text = "Task ", font=("Arial", 10, "bold"))
+            cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8))
+            cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF")
+            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame))
+            cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
+            cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
+            cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
+            cardDescTag = Label(mainFrame, text = "Tag: ", font=("Arial" ,8, "bold"))
+            
+            # print variable data from database
+            variableCardNum = Label(mainFrame, text = taskNumber, font=("Arial" , 10, "bold"))        
+            variableDescName = Label(mainFrame, text = DescName)
+            variableDescPriority = Label(mainFrame, text = DescPriority)
+            variableDescPoints = Label(mainFrame, text = DescPoints)
+            variableDescTag = Label(mainFrame, text = DescTag)
+            
+            # position of fields and buttons within card
+            frontSpace = Label(mainFrame, width=200, height=1, bg = "gray") # coloured status bar
+            if DescStatus == "Not Started":
+                frontSpace.config(fg = "#000000", bg = "#FF0000", text = "Not started")
+            elif DescStatus == "In Progress":
+                frontSpace.config(fg = "#000000", bg = "#FFD800", text = "In Progress")
+            elif DescStatus == "Complete":
+                frontSpace.config(fg = "#000000", bg = "#3AFF00", text = "Complete")
+            frontSpace.grid(row = 2, column = 1, columnspan = 8, padx = 3, pady = 1)
+            
+            priorityBox = Label(mainFrame, width=2, height=1, bg = "gray", highlightbackground="black", highlightthickness=1) # coloured priority box
+            if DescPriority == "Low":
+                priorityBox.config(bg = "#FFD800")
+            elif DescPriority == "Medium":
+                priorityBox.config(bg = "#FFD800")
+            elif DescPriority == "High":
+                priorityBox.config(bg = "#3AFF00")
+            elif DescPriority == "Critical":
+                priorityBox.config(text = "!", font=("Arial" , 9, "bold"),
+                                fg = "#FF0000", bg = "#FFFFFF", highlightbackground="red", highlightthickness=1)
+            priorityBox.grid(row = 1, column = 5, padx = 3, pady = 3)
+            
+            cardNum.grid(row = 1, column = 2, columnspan = 1, padx = 2, pady = 2, sticky = "w")
+            cardEditTask.grid(row = 1, column = 6, padx = 2, pady = 2, sticky = "w")
+            cardDelete.grid(row = 1, column = 7, padx = 2, pady = 2, sticky = "w")
+            cardSwap.grid(row = 1, column = 8, padx = 2, pady = 2, sticky = "w")
+            cardDescName.grid(row = 3, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescPriority.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescPoints.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescTag.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            
+            # position of variables within card
+            variableCardNum.grid(row = 1, column = 3, columnspan = 1, padx = 2, pady = 2, sticky = "w")
+            variableDescName.grid(row = 3, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescPriority.grid(row = 4, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescPoints.grid(row = 5, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescTag.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            
+            # add card to array
+            cardStorage.append(mainFrame)
+        elif pos == 2:
+            # main frame for card
+            mainFrame = Frame(sprintBacklog, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+            # card split into 9Rx8C; cells evenly sized
+            for i in range(1, 8): #R1-R8
+                mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
+            for i in range(2, 9-1): #C2-C8
+                mainFrame.grid_columnconfigure(i, weight = 1, uniform = "cardcolumns")
+            mainFrame.grid_propagate(0) # stop auto resize
+            
+            # print fields and buttons for card
+            cardNum = Label(mainFrame, text = "Task ", font=("Arial", 10, "bold"))
+            cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8))
+            cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF")
+            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame))
+            cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
+            cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
+            cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
+            cardDescTag = Label(mainFrame, text = "Tag: ", font=("Arial" ,8, "bold"))
+            
+            # print variable data from database
+            variableCardNum = Label(mainFrame, text = taskNumber, font=("Arial" , 10, "bold"))        
+            variableDescName = Label(mainFrame, text = DescName)
+            variableDescPriority = Label(mainFrame, text = DescPriority)
+            variableDescPoints = Label(mainFrame, text = DescPoints)
+            variableDescTag = Label(mainFrame, text = DescTag)
+            
+            # position of fields and buttons within card
+            frontSpace = Label(mainFrame, width=200, height=1, bg = "gray") # coloured status bar
+            if DescStatus == "Not Started":
+                frontSpace.config(fg = "#000000", bg = "#FF0000", text = "Not started")
+            elif DescStatus == "In Progress":
+                frontSpace.config(fg = "#000000", bg = "#FFD800", text = "In Progress")
+            elif DescStatus == "Complete":
+                frontSpace.config(fg = "#000000", bg = "#3AFF00", text = "Complete")
+            frontSpace.grid(row = 2, column = 1, columnspan = 8, padx = 3, pady = 1)
+            
+            priorityBox = Label(mainFrame, width=2, height=1, bg = "gray", highlightbackground="black", highlightthickness=1) # coloured priority box
+            if DescPriority == "Low":
+                priorityBox.config(bg = "#FFD800")
+            elif DescPriority == "Medium":
+                priorityBox.config(bg = "#FFD800")
+            elif DescPriority == "High":
+                priorityBox.config(bg = "#3AFF00")
+            elif DescPriority == "Critical":
+                priorityBox.config(text = "!", font=("Arial" , 9, "bold"),
+                                fg = "#FF0000", bg = "#FFFFFF", highlightbackground="red", highlightthickness=1)
+            priorityBox.grid(row = 1, column = 5, padx = 3, pady = 3)
+            
+            cardNum.grid(row = 1, column = 2, columnspan = 1, padx = 2, pady = 2, sticky = "w")
+            cardEditTask.grid(row = 1, column = 6, padx = 2, pady = 2, sticky = "w")
+            cardDelete.grid(row = 1, column = 7, padx = 2, pady = 2, sticky = "w")
+            cardSwap.grid(row = 1, column = 8, padx = 2, pady = 2, sticky = "w")
+            cardDescName.grid(row = 3, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescPriority.grid(row = 4, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescPoints.grid(row = 5, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            cardDescTag.grid(row = 6, column = 2, columnspan = 2, padx = 2, pady = 2, sticky = "w")
+            
+            # position of variables within card
+            variableCardNum.grid(row = 1, column = 3, columnspan = 1, padx = 2, pady = 2, sticky = "w")
+            variableDescName.grid(row = 3, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescPriority.grid(row = 4, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescPoints.grid(row = 5, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            variableDescTag.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
+            
+            # add card to array
+            cardStorage.append(mainFrame)
+
+    # place cards in grid
+    def place_card_swap(cardStorage, pos):
+        if pos == 1:
+            currentRow = 1 
+            currentCol = 1
+            for card in range(0,len(cardStorage)):
+                # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+                if currentCol == 2:
+                    currentCol = 1
+                    currentRow += 1
+                cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
+                currentCol += 1
+        if pos == 2:
+            currentRow = 1 
+            currentCol = 1
+            for card in range(0,len(cardStorage)):
+                # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+                if currentCol == 2:
+                    currentCol = 1
+                    currentRow += 1
+                cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
+                currentCol += 1
+    
+    def display_swap(cardStorage):
+        # connect to database
+        connect_db = sqlite3.connect("tasks.db")
+        
+        # create cusror
+        cursor = connect_db.cursor()
+            
+        # select all data from table    
+        cursor.execute("SELECT * from tasks")
+        rows = cursor.fetchall()
+        
+        # [0]: task_name
+        # [1]: task description
+        # [2]: story_points
+        # [3]: priority
+        # [4]: status
+        # [5]: assigned_to
+        # [6]: tag
+        # [7]: id
+        # [8]: pos
+
+        for row in rows:
+            DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber, pos = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7], row[8]
+            create_task_card_swap(cardStorage, taskNumber, DescName, 
+                            DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos)
+        
+        # display if cardArray not empty
+        if cardStorage:
+            place_card_swap(cardStorage, pos)
+            
+        connect_db.commit
+        connect_db.close()
+
+
+    cardStorage = []
+    display_swap(cardStorage)
+####################################################################################################################################
+
+
 
 def init_tasks_for_sprint(root, title):
     ''' Initialises the tasks for a particular sprint, sorted according to progress status'''
@@ -1215,7 +1443,9 @@ def init_tasks_for_sprint(root, title):
     
     scroll = Scrollbar(sprintTasksDisplay)
     scroll.grid(row = 2, column = 6, rowspan = rows, sticky = "ne")
-    
+
+
+
     def complete_sprint():
         ''' Changes sprint status when "Complete" is clicked '''
         connection = sqlite3.connect("sprints.db")
