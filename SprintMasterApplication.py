@@ -46,6 +46,11 @@ def main():
     requiredCol = 6
     mainWindow = init_main_window("Sprint Master", "2000x630", requiredRow, requiredCol)
     MainWindow = mainWindow
+
+    # Image for application logo
+    sprintMasterLogo = PhotoImage(file = "C:\\Users\\Shyam\\OneDrive\\Desktop\\FIT2101 REPO\\group-c3\\SprintMaster.png")
+    # set icon logo for application
+    mainWindow.iconphoto(False, sprintMasterLogo)
     
     # setup tabs
     notebook = ttk.Notebook(mainWindow)
@@ -98,7 +103,7 @@ def main():
     tags['state'] = 'readonly'
     tags.current(0)
     
-    filterButton = Button(task_tab, text = "FILTER", command = lambda: filter(tags.get()))
+    filterButton = Button(task_tab, text = "FILTER", bg = "#ffbc11", command = lambda: filter(tags.get()))
     # create spacing in grid for C1 and C6
     spaceStart = Frame(task_tab, width=50, height=50, bg = "#f5dd9d")
     spaceEnd = Frame(task_tab, width=50, height=50, bg = "#f5dd9d")
@@ -113,11 +118,11 @@ def main():
     startRow, startCol, spanRow, spanCol = 3, 1, 1, 5 # filter button:
     filterButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "e", padx = 10)
     startRow, startCol, spanRow, spanCol = 2, 2, 1, 2 # create task button
-    createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, sticky = "w")
+    createTaskButton.grid(row = startRow, column = startCol, rowspan = spanRow, columnspan = spanCol, padx = 5,pady = 12, sticky = "w")
     
     # Sprint Board widgets
-    createSprintButton = Button(sprint_tab, text = "Create New Sprint", command = createNewSprintWindow)
-    createSprintButton.place(x = 50, y = 20)
+    createSprintButton = Button(sprint_tab, text = "Create New Sprint", bg = "#abe4ff", command = createNewSprintWindow)
+    createSprintButton.place(x = 54, y = 20)
 
     # add tabs to the notebook
     notebook.add(task_tab, text = "Task Board")
@@ -289,7 +294,9 @@ def createNewSprintWindow():
     # Toplevel object which will
     # be treated as a new window
     newSprintWindow = Toplevel(MainWindow)
- 
+
+    newSprintWindow.configure(bg = "#DDF2FD")
+
     # sets the title of the
     # Toplevel widget
     newSprintWindow.title("New Sprint")
@@ -298,16 +305,16 @@ def createNewSprintWindow():
     newSprintWindow.geometry("400x400")
 
 
-    frame = Frame(newSprintWindow, width = 400, height = 400)
+    frame = Frame(newSprintWindow, width = 400, height = 400, bg = "#DDF2FD")
     frame.pack()
 
-    sprint_name = Label(frame, text = "Sprint Name:")
+    sprint_name = Label(frame, text = "Sprint Name:", bg = "#DDF2FD")
     sprint_name.place(x = 20, y = 50)
 
-    start_date = Label(frame, text = "Start Date:")
+    start_date = Label(frame, text = "Start Date:", bg = "#DDF2FD")
     start_date.place(x = 20, y = 90)
 
-    end_date = Label(frame, text = "End Date:")
+    end_date = Label(frame, text = "End Date:", bg = "#DDF2FD")
     end_date.place(x = 20, y = 140)
 
     sprint_name_entry = Entry(frame, width = 40)
@@ -317,10 +324,10 @@ def createNewSprintWindow():
     start_date_entry.place(x = 110, y = 90)
     end_date_entry.place(x = 110, y = 140)
 
-    createButton = Button(frame, text = "Create Sprint", command = lambda: createSprint(newSprintWindow))
+    createButton = Button(frame, text = "Create Sprint", bg = "#abe4ff", command = lambda: createSprint(newSprintWindow))
     createButton.place(x = 110, y = 290)
 
-    discardButton = Button(frame, text = "Discard Sprint", command = newSprintWindow.destroy)
+    discardButton = Button(frame, text = "Discard Sprint", bg = "#abe4ff", command = newSprintWindow.destroy)
     discardButton.place(x = 225, y = 290)
 
 
@@ -329,6 +336,8 @@ def add_member_window(root):
     # Toplevel object which will
     # be treated as a new window
     addMemberWindow = Toplevel(root)
+
+    addMemberWindow.configure(bg = "#ECE3FC")
  
     # sets the title of the
     # Toplevel widget
@@ -384,13 +393,13 @@ def add_member_window(root):
         refresh_member_cards()
         window.destroy()
 
-    frame = Frame(addMemberWindow, width = 400, height = 200)
+    frame = Frame(addMemberWindow, width = 400, height = 200, bg = "#ECE3FC")
     frame.pack()
 
-    member_name = Label(frame, text = "Member Name:")
+    member_name = Label(frame, text = "Member Name:", bg = "#ECE3FC")
     member_name.place(x = 20, y = 50)
 
-    member_email = Label(frame, text = "Member Email:")
+    member_email = Label(frame, text = "Member Email:", bg = "#ECE3FC")
     member_email.place(x = 20, y = 90)
 
     member_name_entry = Entry(frame, width = 40)
@@ -398,7 +407,7 @@ def add_member_window(root):
     member_name_entry.place(x = 110, y = 50)
     member_email_entry.place(x = 110, y = 90)
 
-    addButton = Button(frame, text = "Add Member", command = lambda: add_member(addMemberWindow))
+    addButton = Button(frame, text = "Add Member", bg = "#d9abff", command = lambda: add_member(addMemberWindow))
     addButton.place(x = 200, y = 150, anchor = CENTER)
 
 
@@ -413,17 +422,17 @@ def init_team_board(root):
     buttonFrame.grid(row = 1, column = 1, pady = (30, 40))
     
     # "+"
-    plusButton = Button(buttonFrame, text = "+", font = ("Arial", 12), width = 1, height = 5,
+    plusButton = Button(buttonFrame, text = "+", font = ("Arial", 12), width = 1, height = 5, bg = "#d9abff",
                         command = lambda: add_member_window(root))
     plusButton.grid(row = 1, column = 1, sticky = W)
     
     # "Add Team Member"
-    addMemberButton = Button(buttonFrame, text = "Add Team Member", width = 16, height = 4,
+    addMemberButton = Button(buttonFrame, text = "Add Team Member", width = 16, height = 4, bg = "#d9abff",
                              command = lambda: add_member_window(root))
     addMemberButton.grid(row = 1, column = 2, sticky = W)
     
     # "Dashboard"
-    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4,
+    dashboardButton = Button(buttonFrame, text = "Dashboard", width = 10, height = 4, bg = "#d9abff",
                              command = lambda: dashboard(root))
     dashboardButton.grid(row = 1, column = 3, sticky = E)
     
@@ -470,7 +479,7 @@ def dashboard(root):
     dashboardWindow.grid_rowconfigure(3, weight = 1)
     dashboardWindow.grid_columnconfigure(1, weight = 1)
 
-    dashboardLabel = Label(dashboardWindow, text = "DASHBOARD", font = ("Roboto", 14, "bold"), fg = "blue", pady = 30, padx = 30)
+    dashboardLabel = Label(dashboardWindow, text = "DASHBOARD", font = ("Roboto", 14, "bold"), fg = "#001449", pady = 30, padx = 30)
     dashboardLabel.grid(row = 1, column = 1, sticky = W+E)
 
     dateFrame = Frame(dashboardWindow, height = 100, width = 200, bg = "blue")
@@ -479,10 +488,10 @@ def dashboard(root):
     dateFrame.grid(row = 2, column = 1, sticky = "")
 
     startDate = Label(dateFrame, text = "Start Date", font = ("Roboto", 9, "bold")
-                       , width = 10, height = 2, bg = "light grey",
+                       , width = 10, height = 2, bg = "#647687", fg = "white",
                        highlightbackground = "black", highlightthickness = 1)
     endDate = Label(dateFrame, text = "End Date", font = ("Roboto", 9, "bold")
-                       , width = 10, height = 2, bg = "light grey",
+                       , width = 10, height = 2, bg = "#647687", fg = "white",
                        highlightbackground = "black", highlightthickness = 1)
 
     startDate.grid(row = 0, column = 0, sticky = W+E)
@@ -637,6 +646,8 @@ def createNewTaskWindow():
     # Toplevel object which will
     # be treated as a new window
     newTaskWindow = Toplevel(MainWindow)
+
+    newTaskWindow.configure(bg = "#f5dd9d")
  
     # sets the title of the
     # Toplevel widget
@@ -646,28 +657,28 @@ def createNewTaskWindow():
     newTaskWindow.geometry("500x500")
 
 
-    frame = Frame(newTaskWindow, width = 400, height = 400)
+    frame = Frame(newTaskWindow, width = 400, height = 400, bg = "#f5dd9d")
     frame.pack()
 
-    task_name = Label(frame, text = "Task Name:")
+    task_name = Label(frame, text = "Task Name:", bg = "#f5dd9d")
     task_name.place(x = 20, y = 50)
 
-    task_description = Label(frame, text = "Task Description:")
+    task_description = Label(frame, text = "Task Description:", bg = "#f5dd9d")
     task_description.place(x = 20, y = 80)
 
-    task_story_points = Label(frame, text = "Story Points:")
+    task_story_points = Label(frame, text = "Story Points:", bg = "#f5dd9d")
     task_story_points.place(x = 20, y = 110)
 
-    task_priority = Label(frame, text = "Priority:")
+    task_priority = Label(frame, text = "Priority:", bg = "#f5dd9d")
     task_priority.place(x = 20, y = 140)
 
-    task_status = Label(frame, text = "Status:")
+    task_status = Label(frame, text = "Status:", bg = "#f5dd9d")
     task_status.place(x = 20, y = 170)
 
-    task_assigned_to = Label(frame, text = "Assigned To:")
+    task_assigned_to = Label(frame, text = "Assigned To:", bg = "#f5dd9d")
     task_assigned_to.place(x = 20, y = 200)
 
-    task_tag = Label(frame, text = "Tag:")
+    task_tag = Label(frame, text = "Tag:", bg = "#f5dd9d")
     task_tag.place(x = 20, y = 230)
 
 
@@ -706,10 +717,10 @@ def createNewTaskWindow():
     tag.current(0)
     tag.place(x = 140, y = 230)
 
-    createButton = Button(frame, text = "Create", command = lambda: createTask(newTaskWindow))
+    createButton = Button(frame, text = "Create", bg = "#ffbc11", command = lambda: createTask(newTaskWindow))
     createButton.place(x = 125, y = 350)
 
-    discardButton = Button(frame, text = "Close", command = newTaskWindow.destroy)
+    discardButton = Button(frame, text = "Close", bg = "#ffbc11", command = newTaskWindow.destroy)
     discardButton.place(x = 225, y = 350)
     
 # initialise main window layout
