@@ -145,7 +145,7 @@ def main():
     
     cursor.execute('''
                 CREATE TABLE IF NOT EXISTS sprints
-                ([sprint_name], [start_date], [end_date], [status])
+                ([sprint_name], [start_date], [end_date], [status], [id])
                 ''')
         
     # select all data from table    
@@ -270,15 +270,16 @@ def createNewSprintWindow():
 
         cursor.execute('''
                 CREATE TABLE IF NOT EXISTS sprints
-                ([sprint_name], [start_date], [end_date], [status])
+                ([sprint_name], [start_date], [end_date], [status], [id])
                 ''')
 
-        connect_db.execute("INSERT INTO sprints VALUES (:sprint_name, :start_date, :end_date, :status)", 
+        connect_db.execute("INSERT INTO sprints VALUES (:sprint_name, :start_date, :end_date, :status, :id)", 
                         {
                             'sprint_name': sprint_name_entry.get(),
                             'start_date': start_date_entry.get_date().strftime("%m/%d/%Y"),
                             'end_date': end_date_entry.get_date().strftime("%m/%d/%Y"),
-                            'status': 'Not started' # default status
+                            'status': 'Not started', # default status
+                            'id': 'None'
                         }
                             )
         
@@ -1502,7 +1503,7 @@ def refresh_sprint_cards():
     
     cursor.execute('''
                 CREATE TABLE IF NOT EXISTS sprints
-                ([sprint_name], [start_date], [end_date], [status])
+                ([sprint_name], [start_date], [end_date], [status], [id])
                 ''')
         
     # select all data from table    
