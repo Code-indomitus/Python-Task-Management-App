@@ -13,6 +13,10 @@ from task_sorting import *
 from us9_team_board import *
 import re
 import time
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from datetime import *
 
 MainWindow = None
 TaskTab = None
@@ -560,7 +564,8 @@ def create_member_card(root, name, email, analytics):
     analyticsFrame.grid(row = 1, column = 3, sticky = W+E)
     
     analyticsButton = Button(analyticsFrame, width = 10, height = 1, text = "Analytics",
-                            font = ("Roboto", 8, "bold"), bg = "#0D5588", fg = "white")
+                            font = ("Roboto", 8, "bold"), bg = "#0D5588", fg = "white",
+                            command = lambda: check_analytics(root, name))
     analyticsButton.place(x=32, y=3)
     
     # delete
@@ -1576,5 +1581,42 @@ def refresh_member_cards():
             memberStorage.append(memberCard)
             
             row += 1
+            
+def check_analytics(root, name):
+    """ Plots a graph of hours logged against time (previous 7 days) """
+    # covert name to string for title
+    strName = ""
+    for char in name:
+        strName += char
+    
+    # get dates (x-axis)
+    duration = 7 # previous 7 days
+    x = []
+    for i in range(0, duration):
+        x.append((datetime.today() - timedelta(days=i)).strftime('%d-%m-%Y'))
+    
+    # hours logged (y-axis)
+    y = [1.2, 3.5, 3.4, 0, 6, 6, 9.7]
+    
+    # tkinter window that will house plot
+    plotWindow = Toplevel(root)
+    
+    figure = Figure(figsize = (5, 5), dpi = 100) # figure that contains plot
+    plot1 = figure.add_subplot(111) # occupy all subplots
+    
+    barChart = plot1.bar(x, y, color = "#00DDD3", width = 0.4) # plot bar chart
+    plot1.bar_label(barChart, label_type='edge') # label y bars
+    plot1.set_xticklabels(x, rotation=45, fontsize=8) # rotate x tick labels
+    figure.tight_layout(rect=[0.04, 0.04, 0.95, 0.95]) # fit to window, [west ,south ,east ,north]
+    
+    # plot labels
+    plot1.set_xlabel("Day")
+    plot1.set_ylabel("Hours logged")
+    plot1.set_title(f"{strName}'s Analytics")
+    
+    # place chart in canvas
+    canvas = FigureCanvasTkAgg(figure, master = plotWindow)  
+    canvas.draw()
+    canvas.get_tk_widget().pack(side = TOP, fill = 'both', expand = True)
     
 main()
