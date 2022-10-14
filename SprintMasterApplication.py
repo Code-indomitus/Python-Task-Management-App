@@ -28,6 +28,7 @@ cardStorage = [] # stores tasks as cards
 newCardList = [] # card list for the 
 sprintCardStorage = [] # card list for sprints
 memberStorage = [] # stores members of a sprint
+sprintCount = 0 # number of exisiting sprints
 
 def main():
     
@@ -52,9 +53,9 @@ def main():
     MainWindow = mainWindow
 
     # Image for application logo
-    sprintMasterLogo = PhotoImage(file = "C:\\Users\\Shyam\\OneDrive\\Desktop\\FIT2101 REPO\\group-c3\\SprintMaster.png")
+    #sprintMasterLogo = PhotoImage(file = "C:\\Users\\Shyam\\OneDrive\\Desktop\\FIT2101 REPO\\group-c3\\SprintMaster.png")
     # set icon logo for application
-    mainWindow.iconphoto(False, sprintMasterLogo)
+    #mainWindow.iconphoto(False, sprintMasterLogo)
     
     # setup tabs
     notebook = ttk.Notebook(mainWindow)
@@ -272,6 +273,21 @@ def createNewSprintWindow():
                 CREATE TABLE IF NOT EXISTS sprints
                 ([sprint_name], [start_date], [end_date], [status], [id])
                 ''')
+        
+        # get all exising sprint ids
+        query = cursor.execute('''
+                                SELECT id FROM sprints
+                                ''')
+        
+        # determine id for newly created sprint
+        ids = []
+        for id in query:
+            ids.append(id[0]) # append all exisiting ids for reference
+            
+        if ids != []:
+            sprintId = max(ids) + 1 # not first sprint to be created
+        else:
+            sprintId = 1 # if first sprint to be created
 
         connect_db.execute("INSERT INTO sprints VALUES (:sprint_name, :start_date, :end_date, :status, :id)", 
                         {
@@ -279,7 +295,7 @@ def createNewSprintWindow():
                             'start_date': start_date_entry.get_date().strftime("%m/%d/%Y"),
                             'end_date': end_date_entry.get_date().strftime("%m/%d/%Y"),
                             'status': 'Not started', # default status
-                            'id': 'None'
+                            'id': sprintId
                         }
                             )
         
@@ -781,7 +797,7 @@ def create_task_card(cardStorage, taskNumber,
     # position of fields and buttons within card
     frontSpace = Label(mainFrame, width=200, height=1, bg = "gray") # coloured status bar
     if DescStatus == "Not Started":
-        frontSpace.config(fg = "#000000", bg = "#FF0000", text = "Not started")
+        frontSpace.config(fg = "#000000", bg = "#DD8300", text = "Not started")
     elif DescStatus == "In Progress":
         frontSpace.config(fg = "#000000", bg = "#FFD800", text = "In Progress")
     elif DescStatus == "Complete":
@@ -790,11 +806,11 @@ def create_task_card(cardStorage, taskNumber,
     
     priorityBox = Label(mainFrame, width=2, height=1, bg = "gray", highlightbackground="black", highlightthickness=1) # coloured priority box
     if DescPriority == "Low":
-        priorityBox.config(bg = "#FFD800")
+        priorityBox.config(bg = "#3CDD00")
     elif DescPriority == "Medium":
-        priorityBox.config(bg = "#FFD800")
+        priorityBox.config(bg = "#FFE400")
     elif DescPriority == "High":
-        priorityBox.config(bg = "#3AFF00")
+        priorityBox.config(bg = "#FF3200")
     elif DescPriority == "Critical":
         priorityBox.config(text = "!", font=("Arial" , 9, "bold"),
                            fg = "#FF0000", bg = "#FFFFFF", highlightbackground="red", highlightthickness=1)
@@ -865,7 +881,7 @@ def display(cardArray):
 def create_sprint_display(window, sprintName, sprintStatus, sprintStart, sprintEnd):
         
     if sprintStatus == "Not started":
-        colour = "#D80000"
+        colour = "#DD8300"
     if sprintStatus == "In progress":
         colour = "#FFEC00"
     elif sprintStatus == "Complete":
@@ -1245,9 +1261,9 @@ def init_swap(root, title):
             if DescPriority == "Low":
                 priorityBox.config(bg = "#FFD800")
             elif DescPriority == "Medium":
-                priorityBox.config(bg = "#FFD800")
+                priorityBox.config(bg = "#DD8300")
             elif DescPriority == "High":
-                priorityBox.config(bg = "#3AFF00")
+                priorityBox.config(bg = "#DD0000")
             elif DescPriority == "Critical":
                 priorityBox.config(text = "!", font=("Arial" , 9, "bold"),
                                 fg = "#FF0000", bg = "#FFFFFF", highlightbackground="red", highlightthickness=1)
