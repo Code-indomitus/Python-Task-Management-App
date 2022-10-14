@@ -1173,14 +1173,17 @@ def init_swap(root, title):
         cursor.close()
         sqliteConnection.close()
 
-        mainFrame.destroy()
         global cardStorage
-        for card in cardStorage:
+        global copyCardStorage
+        mainFrame.destroy()        
+        for card in copyCardStorage:
             card.destroy()
-        cardStorage = []
-        display_swap(cardStorage)
-        display(cardStorage)
+        copyCardStorage = []
+        display_swap(copyCardStorage)
 
+
+    global copyCardStorage
+    copyCardStorage = []
 ##############################################################################################################################
     def create_task_card_swap(cardStorage,taskNumber, 
                      DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos):
@@ -1251,9 +1254,11 @@ def init_swap(root, title):
             
             # add card to array
             cardStorage.append(mainFrame)
+            copyCardStorage.append(mainFrame)
+
         elif pos == 2:
             # main frame for card
-            mainFrame = Frame(sprintBacklog, width=280, height=200, highlightbackground="gray", highlightthickness=2)
+            mainFrame = Frame(sprintBacklogFrame, width=280, height=200, highlightbackground="gray", highlightthickness=2)
             # card split into 9Rx8C; cells evenly sized
             for i in range(1, 8): #R1-R8
                 mainFrame.grid_rowconfigure(i, weight=1, uniform = "cardrows")
@@ -1318,6 +1323,7 @@ def init_swap(root, title):
             
             # add card to array
             cardStorage.append(mainFrame)
+            copyCardStorage.append(mainFrame)
 
     # place cards in grid
     def place_card_swap(cardStorage, pos):
