@@ -1174,14 +1174,14 @@ def init_swap(root, title, id):
     
     # buttons
     # start
-    startButton = Button(sprintTasksDisplay, text = " Get Started ", command = lambda: get_started())
+    startButton = Button(sprintTasksDisplay, text = " Get Started ", command = lambda: get_started(sprintTasksDisplay))
     startButton.grid(row = 4, column = 2, padx = 1, sticky = "e")
     
     # save and exit
-    saveButton = Button(sprintTasksDisplay, text = " Save and Exit ")
+    saveButton = Button(sprintTasksDisplay, text = " Save and Exit ", command = lambda: close_windows(sprintTasksDisplay))
     saveButton.grid(row = 4, column = 4, padx = 1, sticky = "w")
     
-    def get_started():
+    def get_started(sprintTasksDisplay):
         ''' Changes sprint status when "Get Started" is clicked '''
         connection = sqlite3.connect("sprints.db")
         cursor = connection.cursor()
@@ -1191,6 +1191,11 @@ def init_swap(root, title, id):
         cursor.execute(query, data)
         connection.commit()
         refresh_sprint_cards()
+        sprintTasksDisplay.destroy()
+
+    def close_windows(sprintTasksDisplay):
+        sprintTasksDisplay.destroy()
+
 
     def changePos(id, pos, mainFrame, belongs, sprint_id):
         if pos == 1:
@@ -1372,8 +1377,6 @@ def init_swap(root, title, id):
     def place_card_swap(cardStorage, sprint_id, places):
         currentRow = 1 
         currentCol = 1
-        print(cardStorage)
-        print(places)
         for card in range(0,len(cardStorage)):
             # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
             if places[card][1] == sprint_id:
@@ -1388,18 +1391,6 @@ def init_swap(root, title, id):
                     currentRow += 1
                 cardStorage[card][0].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
                 currentCol += 1
-
-        # if pos == 2:
-        #         currentRow = 1 
-        #         currentCol = 1
-        #         for card in range(0,len(cardStorage)):
-        #             # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
-        #             if cardStorage[card][9] != sprint_id:
-        #                 if currentCol == 2:
-        #                     currentCol = 1
-        #                     currentRow += 1
-        #                 cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
-        #                 currentCol += 1
         
     
     def display_swap(cardStorage, sprint_id):
