@@ -41,7 +41,7 @@ def main():
     # create table "tasks" in same dir if it does not exist locally
     cursor.execute('''
                     CREATE TABLE IF NOT EXISTS tasks
-                    ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id], [pos])
+                    ([task_name], [task_description], [story_points], [priority], [status], [assigned_to], [tag], [id], [pos], [belongs])
                     ''')
           
     # attributes
@@ -157,6 +157,7 @@ def main():
     # [1]: start_date
     # [2]: end_date
     # [3]: status
+    # [4]: id
     
     row = 1
     col = 1
@@ -168,12 +169,13 @@ def main():
         status = (sprint[3])
         start = (sprint[1])
         end = (sprint[2])
+        id = (sprint[4])
         
         if col > 5:
             col = 1
             row += 1
     
-        sprintCard = create_sprint_display(sprintDisplay, name, status, start, end)
+        sprintCard = create_sprint_display(sprintDisplay, name, status, start, end, id)
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
@@ -625,7 +627,7 @@ def createNewTaskWindow():
         currentTaskNumber = len(cardStorage)+1 # create the card
         
         # input data
-        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :story_points, :priority, :status, :assigned_to, :tag, :id, :pos)", 
+        connect_db.execute("INSERT INTO tasks VALUES (:task_name, :task_description, :story_points, :priority, :status, :assigned_to, :tag, :id, :pos, :belongs)", 
                         {
                             'task_name': entry1.get(),
                             'task_description': entry2.get(),
@@ -635,7 +637,8 @@ def createNewTaskWindow():
                             'assigned_to': assigned_to.get(),
                             'tag': tag.get(),
                             'id': currentTaskNumber,
-                            'pos': 1
+                            'pos': 1,
+                            'belongs': 0
                         }
                        
                             )
@@ -878,7 +881,7 @@ def display(cardArray):
     connect_db.commit
     connect_db.close()
 
-def create_sprint_display(window, sprintName, sprintStatus, sprintStart, sprintEnd):
+def create_sprint_display(window, sprintName, sprintStatus, sprintStart, sprintEnd, id):
         
     if sprintStatus == "Not started":
         colour = "#DD8300"
@@ -922,7 +925,7 @@ def create_sprint_display(window, sprintName, sprintStatus, sprintStart, sprintE
     
     # edit button
     editButton = Button(sprintFrame, text = "Edit", anchor = W, font=("Arial" ,8, "bold")
-                        , command = lambda: init_swap(MainWindow, sprintName))
+                        , command = lambda: init_swap(MainWindow, sprintName, id))
     editButton.grid(row = 5, column = 2, pady = 5, sticky = W)
     
     global sprintCardStorage
@@ -1116,7 +1119,9 @@ def displayFilter(cardArray, tag):
     connect_db.close()
    #('ALL','UI', 'CORE', 'TESTING') 
 
-def init_swap(root, title):
+
+
+def init_swap(root, title, id):
     
     sprintName = ""
     
@@ -1187,11 +1192,13 @@ def init_swap(root, title):
         connection.commit()
         refresh_sprint_cards()
 
-    def changePos(id, pos, mainFrame):
+    def changePos(id, pos, mainFrame, belongs, sprint_id):
         if pos == 1:
             pos = 2
+            belongs = sprint_id
         elif pos == 2:
             pos = 1
+            belongs = 0
 
         #connect to database
         sqliteConnection = sqlite3.connect('tasks.db')
@@ -1199,27 +1206,28 @@ def init_swap(root, title):
         cursor = sqliteConnection.cursor()
 
         #update the selected row
-        sql_update_query = "Update tasks set pos = ? where id = ?"
-        data = (pos, int(id))
+        sql_update_query = "Update tasks set pos = ?, belongs = ? where id = ?"
+        data = (pos,belongs, int(id))
         cursor.execute(sql_update_query, data)
         sqliteConnection.commit()
         cursor.close()
         sqliteConnection.close()
 
-        global cardStorage
-        global copyCardStorage
+#        global copyCardStorage
+        global places
         mainFrame.destroy()        
-        for card in copyCardStorage:
-            card.destroy()
         copyCardStorage = []
-        display_swap(copyCardStorage)
+        places = []
+        display_swap(copyCardStorage, sprint_id)
 
 
     global copyCardStorage
     copyCardStorage = []
+    global places
+    places = []
 ##############################################################################################################################
     def create_task_card_swap(cardStorage,taskNumber, 
-                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos):
+                     DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos, belongs, sprint_id):
         if pos == 1:
             # main frame for card
             mainFrame = Frame(productBacklogFrame, width=280, height=200, highlightbackground="gray", highlightthickness=2)
@@ -1234,7 +1242,7 @@ def init_swap(root, title):
             cardNum = Label(mainFrame, text = "Task ", font=("Arial", 10, "bold"))
             cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8))
             cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF")
-            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame))
+            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame, belongs, sprint_id))
             cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
             cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
             cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
@@ -1286,8 +1294,9 @@ def init_swap(root, title):
             variableDescTag.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
             
             # add card to array
-            cardStorage.append(mainFrame)
-            copyCardStorage.append(mainFrame)
+            cardStorage.append([mainFrame, belongs])
+            copyCardStorage.append([mainFrame, belongs])
+            places.append([taskNumber, belongs])
 
         elif pos == 2:
             # main frame for card
@@ -1303,7 +1312,7 @@ def init_swap(root, title):
             cardNum = Label(mainFrame, text = "Task ", font=("Arial", 10, "bold"))
             cardEditTask = Button(mainFrame, text = "Edit", font=("Courier", 8))
             cardDelete = Button(mainFrame, text = "X", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF")
-            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame))
+            cardSwap = Button(mainFrame, text = "swap", font=("Arial", 8, "bold"), bg = "#FF0000", fg = "#FFFFFF", command= lambda:changePos(taskNumber, pos, mainFrame, belongs, sprint_id))
             cardDescName = Label(mainFrame, text = "Name: ", font=("Arial" ,8, "bold"))
             cardDescPriority = Label(mainFrame, text = "Priority: ", font=("Arial" ,8, "bold"))
             cardDescPoints = Label(mainFrame, text = "Story Points: ", font=("Arial" ,8, "bold"))
@@ -1355,33 +1364,45 @@ def init_swap(root, title):
             variableDescTag.grid(row = 6, column = 4, columnspan = 4, padx = 2, pady = 2, sticky = "w")
             
             # add card to array
-            cardStorage.append(mainFrame)
-            copyCardStorage.append(mainFrame)
+            cardStorage.append([mainFrame, belongs])
+            copyCardStorage.append([mainFrame, belongs])
+            places.append([taskNumber, belongs])
 
     # place cards in grid
-    def place_card_swap(cardStorage, pos):
-        if pos == 1:
-            currentRow = 1 
-            currentCol = 1
-            for card in range(0,len(cardStorage)):
-                # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+    def place_card_swap(cardStorage, sprint_id, places):
+        currentRow = 1 
+        currentCol = 1
+        print(cardStorage)
+        print(places)
+        for card in range(0,len(cardStorage)):
+            # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+            if places[card][1] == sprint_id:
                 if currentCol == 2:
                     currentCol = 1
                     currentRow += 1
-                cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
+                cardStorage[card][0].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
                 currentCol += 1
-        if pos == 2:
-            currentRow = 1 
-            currentCol = 1
-            for card in range(0,len(cardStorage)):
-                # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+            elif places[card][1] == 0:
                 if currentCol == 2:
                     currentCol = 1
                     currentRow += 1
-                cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
+                cardStorage[card][0].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
                 currentCol += 1
+
+        # if pos == 2:
+        #         currentRow = 1 
+        #         currentCol = 1
+        #         for card in range(0,len(cardStorage)):
+        #             # add column-wise first, then add row if insufficient space ([arbitrary]Rx4C)
+        #             if cardStorage[card][9] != sprint_id:
+        #                 if currentCol == 2:
+        #                     currentCol = 1
+        #                     currentRow += 1
+        #                 cardStorage[card].grid(row = currentRow, column = currentCol, padx = 5, pady = 5, sticky = "s")
+        #                 currentCol += 1
+        
     
-    def display_swap(cardStorage):
+    def display_swap(cardStorage, sprint_id):
         # connect to database
         connect_db = sqlite3.connect("tasks.db")
         
@@ -1401,22 +1422,23 @@ def init_swap(root, title):
         # [6]: tag
         # [7]: id
         # [8]: pos
+        # [9]: belongs
 
         for row in rows:
-            DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber, pos = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7], row[8]
+            DescName, DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, taskNumber, pos, belongs = row[0], row[1], row[3], row[2], row[4], row[5], row[6], row[7], row[8], row[9]
             create_task_card_swap(cardStorage, taskNumber, DescName, 
-                            DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos)
+                            DescDesc, DescPriority, DescPoints, DescStatus, DescAssign, DescTag, pos, belongs, sprint_id)
         
         # display if cardArray not empty
         if cardStorage:
-            place_card_swap(cardStorage, pos)
+            place_card_swap(cardStorage, sprint_id, places)
             
         connect_db.commit
         connect_db.close()
 
 
     cardStorage = []
-    display_swap(cardStorage)
+    display_swap(cardStorage, id)
 ####################################################################################################################################
 
 
@@ -1530,6 +1552,7 @@ def refresh_sprint_cards():
     # [1]: start_date
     # [2]: end_date
     # [3]: status
+    # [4]: id
 
     row = 1
     col = 1
@@ -1539,12 +1562,13 @@ def refresh_sprint_cards():
         status = (sprint[3])
         start = (sprint[1])
         end = (sprint[2])
+        id = (sprint[4])
         
         if col > 5:
             col = 1
             row += 1
     
-        sprintCard = create_sprint_display(SprintDisplay, name, status, start, end)
+        sprintCard = create_sprint_display(SprintDisplay, name, status, start, end, id)
         sprintCard.grid(row = row, column = col, sticky = "w", padx = (0,10), pady = (0,10))
         
         col += 1
