@@ -401,6 +401,7 @@ def log_time_window():
     memberName = StringVar()
     member_name = Combobox(frame, textvariable = memberName)
 
+    # check if there are any members added to the project
     if len(member_name_list) > 0:
         member_name['values'] = tuple(member_name_list)
     else:
