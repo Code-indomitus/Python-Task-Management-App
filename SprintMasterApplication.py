@@ -1875,7 +1875,6 @@ def get_results(root):
     row = 2
     col = 1
     for log in logs:
-        print(log)
         hasData = True
         # [0], [1], [2] = [member_name], [hours_logged], [times_logged]
         memberName = log[0]
@@ -1884,7 +1883,6 @@ def get_results(root):
         else:
             avgHours = log[1]/log[2]
         logCard = create_log_card(tableFrame, memberName, avgHours)
-        print(f"created for {memberName}")
         logCard.grid(row = row, column = col, columnspan = 2,
                      sticky = N)
         
