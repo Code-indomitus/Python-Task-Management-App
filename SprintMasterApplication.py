@@ -710,6 +710,16 @@ def create_member_card(root, name, email, analytics):
         query = ''' DELETE from members where member_name = ?'''
         cursor.execute(query, (memberName,))
         connection.commit()
+
+        ''' Nested method that removes a member '''
+        connection = sqlite3.connect("log.db")
+        cursor = connection.cursor()
+
+        query = ''' DELETE from log where member_name = ?'''
+        cursor.execute(query, (memberName,))
+        connection.commit()
+
+
         refresh_member_cards()
     
     return entryFrame
