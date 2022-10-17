@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from datetime import *
+import random
 
 MainWindow = None
 TaskTab = None
@@ -571,7 +572,7 @@ def dashboard(root):
     # sets the geometry of toplevel
     dashboardWindow.geometry("800x630")
 
-    dashboardWindow.grid_rowconfigure(3, weight = 1)
+    dashboardWindow.grid_rowconfigure(4, weight = 1)
     dashboardWindow.grid_columnconfigure(1, weight = 1)
 
     dashboardLabel = Label(dashboardWindow, text = "DASHBOARD", font = ("Roboto", 14, "bold"), fg = "#001449", pady = 30, padx = 30)
@@ -612,7 +613,8 @@ def dashboard(root):
                        highlightbackground = "black", highlightthickness = 1)
     getResultLabel.grid(row = 2, column = 0, columnspan = 2, sticky = W+E)
 
-    getResultButton = Button(getResultLabel, text = "Get Results", width = 30, height = 1)
+    getResultButton = Button(getResultLabel, text = "Get Results", width = 30, height = 1,
+                             command = lambda: get_results(dashboardWindow))
     getResultButton.grid(sticky = W+E)
 
     backButton = Button(dashboardWindow, text = "Back", command = lambda: dashboardWindow.destroy())
@@ -1715,8 +1717,10 @@ def check_analytics(root, name):
         x.append((datetime.today() - timedelta(days=i)).strftime('%d-%m-%Y'))
     
     # hours logged (y-axis)
-    y = [1.2, 3.5, 3.4, 0, 6, 6, 9.7]
-    
+    y = []
+    for i in range(duration):
+        y.append(random.randrange(1,12))
+        
     # tkinter window that will house plot
     plotWindow = Toplevel(root)
     
@@ -1737,5 +1741,48 @@ def check_analytics(root, name):
     canvas = FigureCanvasTkAgg(figure, master = plotWindow)  
     canvas.draw()
     canvas.get_tk_widget().pack(side = TOP, fill = 'both', expand = True)
+    
+def create_log_card(root, name, hours):
+    ''' Creates an entry of a member in the table '''
+    # turn name into string
+    memberName = ""
+    
+    for char in name:
+        memberName += str(char)
+        
+    # frame storing all fields of a member
+    entryFrame = Frame(root, height = 2, width = 1000)
+    entryFrame.grid_rowconfigure(1, weight = 1)
+    entryFrame.grid_columnconfigure(2, weight = 1)
+    entryFrame.grid(columnspan = 4)
+    
+    # member name
+    nameFrame = Label(entryFrame, text = name, font = ("Roboto", 9)
+                       , width = 52, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    nameFrame.grid(row = 1, column = 1, sticky = W+E)
+    
+    # member hours
+    hoursFrame = Label(entryFrame, text = hours, font = ("Roboto", 9)
+                       , width = 20, height = 2, bg = "white",
+                       highlightbackground = "black", highlightthickness = 1)
+    hoursFrame.grid(row = 1, column = 2, sticky = W+E)
+    
+    return entryFrame
+
+def get_results(root):
+    tableFrame = Frame(root, bg = "red", width = 300, height = 200)
+    tableFrame.grid(row = 4, column = 1)
+    
+    tableFrame.grid_columnconfigure(2, weight = 1)
+    tableFrame.grid_rowconfigure(10, weight = 1)
+    
+    nameLabel = Label(tableFrame, text = "Name", bg = "white", width = 45, height = 2,
+                      highlightbackground="black", highlightthickness=1)
+    nameLabel.grid(row = 1, column = 1, sticky = W+E)
+    
+    hoursLabel = Label(tableFrame, text = "Hours logged", bg = "white", width = 45, height = 2,
+                       highlightbackground="black", highlightthickness=1)
+    hoursLabel.grid(row = 1, column = 2, sticky = W+E)
     
 main()
