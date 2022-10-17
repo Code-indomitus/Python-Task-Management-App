@@ -811,6 +811,7 @@ def createNewTaskWindow():
     assigned_to = Combobox(frame, textvariable = current_assigned_to)
 
     if len(member_name_list) > 0:
+        member_name_list.insert(0, "Everyone")
         assigned_to['values'] = tuple(member_name_list)
     else:
         assigned_to['values'] = ('Everyone')
