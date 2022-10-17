@@ -88,8 +88,8 @@ def main():
     SprintDisplay = sprintDisplay
     
     # border spacing for main frame
-    Label(sprint_tab, width = 7).grid(row = 1, column = 1, sticky = W)
-    Label(sprint_tab, width = 7).grid(row = 1, column = 3, sticky = E)
+    Label(sprint_tab, width = 7, bg = "#DDF2FD").grid(row = 1, column = 1, sticky = W)
+    Label(sprint_tab, width = 7, bg = "#DDF2FD").grid(row = 1, column = 3, sticky = E)
 
     global TaskTab
     global SprintTab
@@ -1831,31 +1831,31 @@ def create_log_card(root, name, hours):
     
     # member name
     nameFrame = Label(entryFrame, text = name, font = ("Roboto", 9)
-                       , width = 52, height = 2, bg = "white",
+                       , width = 45, height = 2, bg = "white",
                        highlightbackground = "black", highlightthickness = 1)
     nameFrame.grid(row = 1, column = 1, sticky = W+E)
     
     # member hours
     hoursFrame = Label(entryFrame, text = hours, font = ("Roboto", 9)
-                       , width = 20, height = 2, bg = "white",
+                       , width = 45, height = 2, bg = "white",
                        highlightbackground = "black", highlightthickness = 1)
     hoursFrame.grid(row = 1, column = 2, sticky = W+E)
     
     return entryFrame
 
 def get_results(root):
-    tableFrame = Frame(root, bg = "red", width = 300, height = 200)
+    tableFrame = Frame(root, bg = "red", width = 300, height = 300)
     tableFrame.grid(row = 4, column = 1)
     
     tableFrame.grid_columnconfigure(2, weight = 1)
     tableFrame.grid_rowconfigure(10, weight = 1)
     
-    nameLabel = Label(tableFrame, text = "Name", bg = "#647687", fg = "white",
+    nameLabel = Label(tableFrame, text = "Member Name", bg = "#647687", fg = "white",
                       font = ("Roboto", 9, "bold"), width = 45, height = 2,
                       highlightbackground="black", highlightthickness=1)
     nameLabel.grid(row = 1, column = 1, sticky = W+E)
     
-    hoursLabel = Label(tableFrame, text = "Average Time", bg = "#647687", fg = "white",
+    hoursLabel = Label(tableFrame, text = "Average Time (Hours)", bg = "#647687", fg = "white",
                        font = ("Roboto", 9, "bold"), width = 45, height = 2,
                        highlightbackground="black", highlightthickness=1)
     hoursLabel.grid(row = 1, column = 2, sticky = W+E)
@@ -1872,11 +1872,11 @@ def get_results(root):
     
     hasData = False
     
+    row = 2
+    col = 1
     for log in logs:
+        print(log)
         hasData = True
-        row = 2
-        col = 1
-        print(log) 
         # [0], [1], [2] = [member_name], [hours_logged], [times_logged]
         memberName = log[0]
         if log[1] == 0 or log[2] == 0:
@@ -1884,8 +1884,9 @@ def get_results(root):
         else:
             avgHours = log[1]/log[2]
         logCard = create_log_card(tableFrame, memberName, avgHours)
+        print(f"created for {memberName}")
         logCard.grid(row = row, column = col, columnspan = 2,
-                     )
+                     sticky = N)
         
         row += 1
         
