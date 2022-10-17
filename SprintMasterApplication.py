@@ -233,7 +233,18 @@ def main():
             memberStorage.append(memberCard)
             
             row += 1
-    
+
+    # Create/Connect to a database
+    connect_db = sqlite3.connect('log.db')
+    # Create cusror
+    cursor = connect_db.cursor()
+
+    # create table "log" in same dir if it does not exist locally
+    cursor.execute('''
+                CREATE TABLE IF NOT EXISTS log
+                ([member_name], [hours_logged], [times_logged])
+                ''')
+
     # run   
     mainWindow.mainloop()
 
@@ -372,6 +383,7 @@ def log_time_window():
     # sets the geometry of toplevel
     logTimeWindow.geometry("300x300")
 
+
     def log_time():
         pass
         
@@ -462,6 +474,7 @@ def add_member_window(root):
 
         # Create/Connect to a database
         connect_db = sqlite3.connect('members.db')
+        
         # Create cusror
         cursor = connect_db.cursor()
 
@@ -478,10 +491,36 @@ def add_member_window(root):
                         }
                             )
         
+        #Update the log database with new member
+
+        # Create/Connect to a database
+        connect_log_db = sqlite3.connect('log.db')
+        # Create cusror
+        cursor_log = connect_log_db.cursor()
+
+        # create table "log" in same dir if it does not exist locally
+        cursor_log.execute('''
+                    CREATE TABLE IF NOT EXISTS log
+                    ([member_name], [hours_logged], [times_logged])
+                    ''')
+        
+        connect_log_db.execute("INSERT INTO log VALUES (:member_name, :hours_logged, :times_logged)", 
+                {
+                    'member_name': member_name_entry.get(),
+                    'hours_logged': 0,
+                    'times_logged': 0
+                }
+                    )
+
         # Commit changes
         connect_db.commit()
         # Close Connnection
         connect_db.close()
+
+        # Commit changes
+        connect_log_db.commit()
+        # Close Connnection
+        connect_log_db.close()
 
         # Clear input boxes
         member_name_entry.delete(0, END)
@@ -675,6 +714,16 @@ def create_member_card(root, name, email, analytics):
         query = ''' DELETE from members where member_name = ?'''
         cursor.execute(query, (memberName,))
         connection.commit()
+
+        ''' Nested method that removes a member '''
+        connection = sqlite3.connect("log.db")
+        cursor = connection.cursor()
+
+        query = ''' DELETE from log where member_name = ?'''
+        cursor.execute(query, (memberName,))
+        connection.commit()
+
+
         refresh_member_cards()
     
     return entryFrame
