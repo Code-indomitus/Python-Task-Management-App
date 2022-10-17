@@ -129,6 +129,10 @@ def main():
     createSprintButton = Button(sprint_tab, text = "Create New Sprint", bg = "#abe4ff", command = createNewSprintWindow)
     createSprintButton.place(x = 54, y = 20)
 
+    #log time 
+    logTimeButton = Button(sprint_tab, text = "Log Time", bg = "#abe4ff", command = log_time_window)
+    logTimeButton.place(x = 1000, y = 20)
+
     # add tabs to the notebook
     notebook.add(task_tab, text = "Task Board")
     notebook.add(sprint_tab, text = "Sprint Board")
@@ -353,6 +357,74 @@ def createNewSprintWindow():
     discardButton = Button(frame, text = "Discard Sprint", bg = "#abe4ff", command = newSprintWindow.destroy)
     discardButton.place(x = 225, y = 290)
 
+def log_time_window():
+    # Toplevel object which will
+    # be treated as a new window
+    logTimeWindow = Toplevel(MainWindow)
+
+    logTimeWindow.configure(bg = "#DDF2FD")
+
+    # sets the title of the
+    # Toplevel widget
+    logTimeWindow.title("Log Time")
+ 
+    # sets the geometry of toplevel
+    logTimeWindow.geometry("300x300")
+
+    def log_time():
+        pass
+        
+    connect_db = sqlite3.connect("members.db")
+    # create cusror
+    cursor = connect_db.cursor()
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    member_name_list = [] # list of member names
+    for member in members:
+        member_name_list.append(member[0])
+
+
+    frame = Frame(logTimeWindow, width = 400, height = 400, bg = "#DDF2FD")
+    frame.pack()
+    
+    member_name = Label(frame, text = "Member:", bg = "#DDF2FD")
+    member_name.place(x = 20, y = 50)
+
+    time_spent = Label(frame, text = "Time Spent:", bg = "#DDF2FD")
+    time_spent.place(x = 20, y = 90)
+
+    date = Label(frame, text = "End Date:", bg = "#DDF2FD")
+    date.place(x = 20, y = 130)
+
+    memberName = StringVar()
+    member_name = Combobox(frame, textvariable = memberName)
+
+    # check if there are any members added to the project
+    if len(member_name_list) > 0:
+        member_name['values'] = tuple(member_name_list)
+    else:
+        member_name['values'] = ('None')
+
+    member_name['state'] = 'readonly'
+    member_name.current(0)
+    member_name.place(x = 110, y = 50)
+
+    time_spent_entry = Entry(frame, width = 23)
+    date_entry = DateEntry(frame,selectmode='day')
+
+    time_spent_entry.place(x = 110, y = 90)
+    date_entry.place(x = 110, y = 130)
+
+    if len(member_name_list) > 0:
+        logButton = Button(frame, text = "Log Time", bg = "#abe4ff", command = lambda: log_time)
+        logButton.place(x = 115, y = 210)
+    else:
+        no_member_label = Label(frame, text = "NO MEMBERS AVAILABLE", bg = "#abe4ff")
+        no_member_label.place(x = 80, y = 210)
 
 def add_member_window(root):
 
@@ -547,9 +619,6 @@ def dashboard(root):
     backButton.grid(row = 1, column = 1, padx = 40, pady = 40, sticky = E)
 
 
-
-
-
 def create_member_card(root, name, email, analytics):
     ''' Creates an entry of a member in the table '''
     # turn name into string
@@ -728,9 +797,27 @@ def createNewTaskWindow():
     status.current(0)
     status.place(x = 140, y = 170)
 
+    connect_db = sqlite3.connect("members.db")
+    # create cusror
+    cursor = connect_db.cursor()
+    # select all data from table    
+    cursor.execute("SELECT * from members")
+    members = cursor.fetchall()
+    # [0]: member_name
+    # [1]: member_email
+    # [2]: member_analytics
+    member_name_list = [] # list of member names
+    for member in members:
+        member_name_list.append(member[0])
+
     current_assigned_to = StringVar()
     assigned_to = Combobox(frame, textvariable = current_assigned_to)
-    assigned_to['values'] = ('Chang Lin Ong', 'Lai Carson', 'Shyam Kamalesh Borkar', 'Tiong Yue Khoo')
+
+    if len(member_name_list) > 0:
+        member_name_list.insert(0, "Everyone")
+        assigned_to['values'] = tuple(member_name_list)
+    else:
+        assigned_to['values'] = ('Everyone')
     assigned_to['state'] = 'readonly'
     assigned_to.current(0)
     assigned_to.place(x = 140, y = 200)
