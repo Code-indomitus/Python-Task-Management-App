@@ -384,7 +384,31 @@ def log_time_window():
 
 
     def log_time():
-        pass
+        #connect to database
+        sqliteConnection = sqlite3.connect('log.db')
+        #connect to cursor
+        cursor = sqliteConnection.cursor()
+        cursor.execute("SELECT * from log where member_name")
+        member = cursor.fetchall()
+        sqlite_select_query = """SELECT * from log where member_name = ?"""
+        cursor.execute(sqlite_select_query, (member_name.get(),))
+        record = cursor.fetchone()
+
+        prev_time_logged = int(record[1])
+        prev_times_logged = int(record[2])
+
+        new_time_logged = prev_time_logged + int(time_spent_entry.get())
+        new_times_logged = prev_times_logged + 1
+
+        #update the selected row
+        sql_update_query = "Update log set hours_logged = ?, times_logged = ? where member_name = ?"
+        data = (new_time_logged, new_times_logged, member_name.get())
+        cursor.execute(sql_update_query, data)
+        sqliteConnection.commit()
+        cursor.close()
+        sqliteConnection.close()
+
+        logTimeWindow.destroy()
         
     connect_db = sqlite3.connect("members.db")
     # create cusror
@@ -403,8 +427,8 @@ def log_time_window():
     frame = Frame(logTimeWindow, width = 400, height = 400, bg = "#DDF2FD")
     frame.pack()
     
-    member_name = Label(frame, text = "Member:", bg = "#DDF2FD")
-    member_name.place(x = 20, y = 50)
+    member_name_label = Label(frame, text = "Member:", bg = "#DDF2FD")
+    member_name_label.place(x = 20, y = 50)
 
     time_spent = Label(frame, text = "Time Spent:", bg = "#DDF2FD")
     time_spent.place(x = 20, y = 90)
@@ -432,7 +456,7 @@ def log_time_window():
     date_entry.place(x = 110, y = 130)
 
     if len(member_name_list) > 0:
-        logButton = Button(frame, text = "Log Time", bg = "#abe4ff", command = lambda: log_time)
+        logButton = Button(frame, text = "Log Time", bg = "#abe4ff", command = log_time)
         logButton.place(x = 115, y = 210)
     else:
         no_member_label = Label(frame, text = "NO MEMBERS AVAILABLE", bg = "#abe4ff")
