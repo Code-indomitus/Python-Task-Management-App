@@ -1826,12 +1826,48 @@ def get_results(root):
     tableFrame.grid_columnconfigure(2, weight = 1)
     tableFrame.grid_rowconfigure(10, weight = 1)
     
-    nameLabel = Label(tableFrame, text = "Name", bg = "white", width = 45, height = 2,
+    nameLabel = Label(tableFrame, text = "Name", bg = "#647687", fg = "white",
+                      font = ("Roboto", 9, "bold"), width = 45, height = 2,
                       highlightbackground="black", highlightthickness=1)
     nameLabel.grid(row = 1, column = 1, sticky = W+E)
     
-    hoursLabel = Label(tableFrame, text = "Hours logged", bg = "white", width = 45, height = 2,
+    hoursLabel = Label(tableFrame, text = "Average Time", bg = "#647687", fg = "white",
+                       font = ("Roboto", 9, "bold"), width = 45, height = 2,
                        highlightbackground="black", highlightthickness=1)
     hoursLabel.grid(row = 1, column = 2, sticky = W+E)
+    
+    # Create/Connect to a database
+    connect_db = sqlite3.connect('log.db')
+    # Create cusror
+    cursor = connect_db.cursor()
+
+    # create table "log" in same dir if it does not exist locally
+    logs = cursor.execute('''
+                SELECT * from log
+                ''')
+    
+    hasData = False
+    
+    for log in logs:
+        hasData = True
+        row = 2
+        col = 1
+        print(log) 
+        # [0], [1], [2] = [member_name], [hours_logged], [times_logged]
+        memberName = log[0]
+        if log[1] == 0 or log[2] == 0:
+            avgHours = 0
+        else:
+            avgHours = log[1]/log[2]
+        logCard = create_log_card(tableFrame, memberName, avgHours)
+        logCard.grid(row = row, column = col, columnspan = 2,
+                     )
+        
+        row += 1
+        
+    if not hasData:
+        noLogs = Label(tableFrame, text = "No data to display.", width = 45, height = 2,
+                    highlightbackground="black", highlightthickness=1, bg = "white")
+        noLogs.grid(row = 2, column = 1, columnspan = 2, sticky=W+E)
     
 main()
